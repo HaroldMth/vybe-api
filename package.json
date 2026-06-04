@@ -1,0 +1,28 @@
+{
+  "name": "vybe-api",
+  "version": "1.0.0",
+  "description": "VYBE Music App - Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@fikxzmodzz/spotify-search": "^1.0.0",
+    "@stef-0012/synclyrics": "^2.5.10",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "genius-lyrics": "^4.4.7",
+    "genius-lyrics-api": "^3.2.1",
+    "soundcloud-scraper": "^5.0.3",
+    "youtube-sr": "^4.3.12"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
