@@ -1,12 +1,12 @@
 const { getSpotifyStreamUrl } = require('./spotify')
 const { getYoutubeStreamUrl } = require('./youtube')
 
-const getStreamUrl = async (query) => {
+const getStreamUrl = async (query, hints = {}) => {
   const trimmed = String(query).trim()
   if (!trimmed) throw new Error('Query is required')
 
   try {
-    const result = await getSpotifyStreamUrl(trimmed)
+    const result = await getSpotifyStreamUrl(trimmed, hints)
     console.info('[stream helper] resolved via Spotify')
     return result
   } catch (spotifyErr) {
@@ -14,7 +14,7 @@ const getStreamUrl = async (query) => {
   }
 
   try {
-    const result = await getYoutubeStreamUrl(trimmed)
+    const result = await getYoutubeStreamUrl(trimmed, hints)
     console.info('[stream helper] resolved via YouTube fallback')
     return { ...result, source: 'youtube' }
   } catch (youtubeErr) {

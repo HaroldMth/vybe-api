@@ -31,12 +31,24 @@ const getPublicAudioUrl = (req, query) => {
   return `${req.protocol}://${req.get('host')}/api/stream/audio?q=${encodeURIComponent(query)}`
 }
 
-const resolveStream = async (query) => {
-  const key = query.trim().toLowerCase()
+const getStreamHints = (req) => {
+  const { title, artist, duration, deezerId } = req.query
+  const durationSec = duration ? Number(duration) : undefined
+  const parsedDeezerId = deezerId ? Number(deezerId) : undefined
+  return {
+    title: title ? String(title).trim() : undefined,
+    artist: artist ? String(artist).trim() : undefined,
+    durationSec: Number.isFinite(durationSec) && durationSec > 0 ? durationSec : undefined,
+    deezerId: Number.isFinite(parsedDeezerId) && parsedDeezerId > 0 ? parsedDeezerId : undefined,
+  }
+}
+
+const resolveStream = async (query, hints = {}) => {
+  const key = [query.trim().toLowerCase(), hints.title, hints.artist].filter(Boolean).join('|')
   const cached = resolvedStreamCache.get(key)
   if (cached) return cached
 
-  const result = await getStreamUrl(query)
+  const result = await getStreamUrl(query, hints)
   resolvedStreamCache.set(key, result)
   return result
 }
@@ -158,9 +170,10 @@ const proxyRemoteAudio = async (req, res, url) => {
 router.get('/', async (req, res) => {
   const { q } = req.query
   if (!q) return res.status(400).json({ success: false, message: 'q param required' })
+  const hints = getStreamHints(req)
 
   try {
-    const result = await getStreamUrl(q)
+    const result = await getStreamUrl(q, hints)
     resolvedStreamCache.set(q.trim().toLowerCase(), result)
     res.json({
       success: true,
@@ -179,9 +192,10 @@ router.get('/', async (req, res) => {
 router.get('/audio', async (req, res) => {
   const { q } = req.query
   if (!q) return res.status(400).json({ success: false, message: 'q param required' })
+  const hints = getStreamHints(req)
 
   try {
-    const result = await resolveStream(q)
+    const result = await resolveStream(q, hints)
     const filePath = getCachePath(q, result.url, result)
     const cachedStat = await getCachedFileInfo(filePath)
 

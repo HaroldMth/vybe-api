@@ -1,4 +1,7 @@
 const axios = require('axios')
+const { get } = require('./deezer')
+const { parseQuery, parseDurationToSec, pickBestTrack, UNWANTED_TITLE_RE } = require('./trackMatch')
+const { resolveSpotifyViaMusicBrainz } = require('./spotifyResolve')
 
 const SPOTIFY_TRACK_RE = /open\.spotify\.com\/track\/([a-zA-Z0-9]+)/
 
@@ -42,10 +45,74 @@ const extractSpotifyTrackUrl = (input) => {
   return match ? `https://open.spotify.com/track/${match[1]}` : null
 }
 
-const searchSpotifyTrack = async (query) => {
-  const apikey = process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x'
+const resolveCanonicalFromDeezer = async (query, hints = {}) => {
+  if (hints.deezerId) {
+    try {
+      const track = await get(`/track/${hints.deezerId}`)
+      console.info(
+        `[spotify helper] deezer track ${hints.deezerId}: "${track.title}" by ${track.artist?.name} (${track.duration}s)`
+      )
+      return {
+        title: hints.title || track.title,
+        artist: hints.artist || track.artist?.name || '',
+        durationSec: hints.durationSec || track.duration,
+        deezerId: track.id,
+        isrc: track.isrc || null,
+      }
+    } catch (err) {
+      console.warn(`[spotify helper] deezer track ${hints.deezerId} failed: ${err.message}`)
+    }
+  }
 
-  console.info(`[spotify helper] searching for "${query}"`)
+  try {
+    const searchQ =
+      hints.title && hints.artist
+        ? `track:"${hints.title}" artist:"${hints.artist}"`
+        : query
+
+    const data = await get('/search', { q: searchQ, limit: 12 })
+    const candidates = (data.data || []).map((track) => ({
+      title: track.title,
+      artist: track.artist?.name || '',
+      duration: track.duration,
+      durationSec: track.duration,
+      source: 'deezer',
+      deezerId: track.id,
+    }))
+
+    const expected = {
+      title: hints.title || parseQuery(query).title,
+      artist: hints.artist || parseQuery(query).artist,
+    }
+
+    const best = pickBestTrack(candidates, expected, { minScore: 70 })
+    if (best) {
+      console.info(
+        `[spotify helper] deezer canonical: "${best.title}" by ${best.artist} (${best.durationSec}s, score ${best._matchScore})`
+      )
+      return {
+        title: best.title,
+        artist: best.artist,
+        durationSec: best.durationSec,
+        deezerId: best.deezerId,
+        isrc: null,
+      }
+    }
+  } catch (err) {
+    console.warn(`[spotify helper] deezer canonical lookup failed: ${err.message}`)
+  }
+
+  return {
+    title: hints.title || parseQuery(query).title,
+    artist: hints.artist || parseQuery(query).artist,
+    durationSec: hints.durationSec ?? null,
+    deezerId: hints.deezerId || null,
+    isrc: null,
+  }
+}
+
+const searchSpotifyCandidates = async (query) => {
+  const apikey = process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x'
 
   const { data } = await axios.get(SEARCH_URL, {
     params: { apikey, query },
@@ -56,15 +123,106 @@ const searchSpotifyTrack = async (query) => {
     throw new Error('No Spotify tracks found')
   }
 
-  const track = data.results[0]
-  if (!track?.url) throw new Error('Spotify search returned no track URL')
+  return data.results
+}
+
+const searchSpotifyTrack = async (query, hints = {}) => {
+  const parsed = parseQuery(query)
+  const expected = await resolveCanonicalFromDeezer(query, {
+    title: hints.title || parsed.title,
+    artist: hints.artist || parsed.artist,
+    durationSec: hints.durationSec,
+    deezerId: hints.deezerId,
+  })
+
+  const searchQueries = [
+    expected.artist && expected.title ? `${expected.artist} ${expected.title}` : null,
+    expected.title && expected.artist ? `${expected.title} ${expected.artist}` : null,
+    query,
+  ].filter(Boolean)
+
+  const seenUrls = new Set()
+  const candidates = []
+
+  const mbMatch = await resolveSpotifyViaMusicBrainz({
+    deezerId: expected.deezerId || hints.deezerId,
+    isrc: expected.isrc,
+    title: expected.title,
+    artist: expected.artist,
+    durationSec: expected.durationSec,
+  })
+  if (mbMatch?.spotifyUrl) {
+    seenUrls.add(mbMatch.spotifyUrl)
+    candidates.push(mbMatch)
+  }
+
+  for (const searchQuery of [...new Set(searchQueries)]) {
+    console.info(`[spotify helper] searching for "${searchQuery}"`)
+    try {
+      const results = await searchSpotifyCandidates(searchQuery)
+      results.forEach((track) => {
+        if (!track?.url || seenUrls.has(track.url)) return
+        seenUrls.add(track.url)
+        candidates.push(track)
+      })
+    } catch (err) {
+      console.warn(`[spotify helper] search failed for "${searchQuery}": ${err.message}`)
+    }
+  }
+
+  if (candidates.length === 0) {
+    throw new Error('No Spotify tracks found')
+  }
+
+  const isAcceptable = (track) => {
+    if (!track) return false
+    if (UNWANTED_TITLE_RE.test(track.title)) return false
+    if (expected.durationSec && track.durationSec) {
+      const diff = Math.abs(track.durationSec - expected.durationSec)
+      if (diff > 12) return false
+    }
+    return true
+  }
+
+  if (mbMatch?.spotifyUrl && isAcceptable(mbMatch)) {
+    console.info(
+      `[spotify helper] using MusicBrainz ISRC match → ${mbMatch.spotifyUrl}`
+    )
+    return {
+      title: mbMatch.title,
+      artist: mbMatch.artist,
+      thumbnail: null,
+      duration: mbMatch.duration,
+      spotifyUrl: mbMatch.spotifyUrl,
+    }
+  }
+
+  const mapped = candidates.map((track) => ({
+    title: track.title,
+    artist: track.artist,
+    duration: track.duration,
+    durationSec: parseDurationToSec(track.duration),
+    thumbnail: track.thumbnail,
+    spotifyUrl: track.url,
+  }))
+
+  const best = pickBestTrack(mapped, expected, { minScore: 130 })
+
+  const track = isAcceptable(best) ? best : mapped.find(isAcceptable)
+  if (!track?.spotifyUrl) {
+    throw new Error('No official studio match in Spotify search results')
+  }
+
+  console.info(
+    `[spotify helper] picked "${track.title}" by ${track.artist} (score ${track._matchScore || 'n/a'})`
+  )
 
   return {
     title: track.title,
     artist: track.artist,
     thumbnail: track.thumbnail,
     duration: track.duration,
-    spotifyUrl: track.url,
+    spotifyUrl: track.spotifyUrl || track.url,
   }
 }
 
@@ -131,11 +289,11 @@ const getSpotifyDownloadUrl = async (spotifyUrl) => {
   }
 }
 
-const getSpotifyStreamUrl = async (query) => {
+const getSpotifyStreamUrl = async (query, hints = {}) => {
   const directUrl = extractSpotifyTrackUrl(query)
   const meta = directUrl
     ? { spotifyUrl: directUrl, title: null, artist: null, thumbnail: null, duration: null }
-    : await searchSpotifyTrack(query)
+    : await searchSpotifyTrack(query, hints)
 
   const download = await getSpotifyDownloadUrl(meta.spotifyUrl)
 
