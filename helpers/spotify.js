@@ -7,7 +7,7 @@ const SPOTIFY_TRACK_RE = /open\.spotify\.com\/track\/([a-zA-Z0-9]+)/
 
 const SEARCH_URL =
   process.env.GIFTED_SPOTIFY_SEARCH ||
-  'https://api.giftedtech.co.ke/api/search/spotifysearch'
+  'https://api.giftedtech.co.ke/api/search/spotifylyrics'
 
 const DOWNLOAD_PROVIDERS = [
   {
