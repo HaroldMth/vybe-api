@@ -1,5 +1,9 @@
 const UNWANTED_TITLE_RE =
-  /\b(remix|live|acoustic|cover|karaoke|sped up|slowed|nightcore|8d|reverb|unofficial|tribute|instrumental|edit|extended|demo|bootleg|radio edit|zwette|ti[eë]sto|sxsw|recorded at|re-recorded|piano|guitar|violin|lofi|lo-fi|session|stripped|mashup|ringtone)\b/i
+  /\b(remix|live|acoustic|cover|karaoke|sped up|slowed|nightcore|8d|reverb|unofficial|tribute|instrumental|edit|extended|demo|bootleg|radio edit|zwette|ti[eë]sto|sxsw|recorded at|re-recorded|piano|guitar|violin|lofi|lo-fi|session|stripped|mashup|ringtone|fan made|reaction|type beat|beat|vlog|ost|amv|lyric video|fan video|dance|performance)\b/i
+
+// Matches when the video title has " - [some other artist name]" pattern that differs from expected
+// Used to penalise unofficial / cover uploads that don't match the expected artist at all
+const OTHER_ARTIST_SEPARATOR_RE = /\s+-\s+/
 
 const normalize = (value = '') =>
   String(value)
@@ -156,7 +160,24 @@ const scoreTrack = (candidate, expected = {}) => {
   const durationPoints = scoreDuration(candidate.duration, expectedDurationSec)
   const unwantedPenalty = UNWANTED_TITLE_RE.test(title) ? -80 : 0
 
-  const total = titlePoints + artistPoints + durationPoints + unwantedPenalty
+  // Extra penalty: if the video title contains " - OtherName" and OtherName doesn't overlap
+  // with the expected artist, it's almost certainly a cover/unofficial upload.
+  let coverPenalty = 0
+  if (expectedArtist) {
+    const segments = title.split(OTHER_ARTIST_SEPARATOR_RE)
+    if (segments.length >= 2) {
+      // The last segment is typically the uploader / cover artist
+      const lastSeg = normalize(segments[segments.length - 1])
+      const normExpected = normalize(expectedArtist)
+      const overlap = tokenOverlap(lastSeg, normExpected)
+      // If the last segment has NO overlap with the expected artist it's a cover credit
+      if (overlap === 0 && lastSeg.length > 1 && lastSeg !== 'official' && lastSeg !== 'audio' && lastSeg !== 'video') {
+        coverPenalty = -60
+      }
+    }
+  }
+
+  const total = titlePoints + artistPoints + durationPoints + unwantedPenalty + coverPenalty
 
   return {
     total,
@@ -164,6 +185,7 @@ const scoreTrack = (candidate, expected = {}) => {
     artistPoints,
     durationPoints,
     unwantedPenalty,
+    coverPenalty,
   }
 }
 
