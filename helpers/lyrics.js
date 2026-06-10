@@ -36,7 +36,7 @@ const parseLrcString = (lrcText) => {
       const secs = parseInt(match[2], 10)
       const msPart = match[3] ? parseInt(match[3].padEnd(3, '0').slice(0, 3), 10) : 0
       
-      const startTime = (mins * 60 + secs) * 1000 + (match[3] && match[3].length === 2 ? msPart * 10 : msPart)
+      const startTime = (mins * 60 + secs) * 1000 + msPart
       const text = line.replace(timeRegex, '').trim()
       
       if (text) {
