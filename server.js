@@ -2,6 +2,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '.env') })
 const express = require('express')
 const cors = require('cors')
 const app = express()
+app.set('trust proxy', true)
 
 app.use(cors())
 app.use(express.json())
