@@ -1,24 +1,37 @@
 const axios = require('axios')
 const { get } = require('./deezer')
-const { parseQuery, parseDurationToSec, pickBestTrack, UNWANTED_TITLE_RE } = require('./trackMatch')
+const { parseQuery, parseDurationToSec, pickBestTrack, scoreTrack, UNWANTED_TITLE_RE } = require('./trackMatch')
 const { resolveSpotifyViaMusicBrainz } = require('./spotifyResolve')
 
 const SPOTIFY_TRACK_RE = /open\.spotify\.com\/track\/([a-zA-Z0-9]+)/
 
-const SEARCH_URL =
-  process.env.GIFTED_SPOTIFY_SEARCH ||
-  'https://api.giftedtech.co.ke/api/search/spotifylyrics'
+const SEARCH_URLS = [
+  process.env.GIFTED_SPOTIFY_SEARCH,
+  'https://api.gifted.co.ke/api/search/spotifysearch',
+  'https://api.gifted.co.ke/api/search/spotifylyrics',
+].filter(Boolean)
+const SEARCH_URL = SEARCH_URLS[0]
 
 const DOWNLOAD_PROVIDERS = [
   {
     name: 'spotifydl',
     url: process.env.SPOTIFY_DL || 'https://apis.davidcyril.name.ng/spotifydl',
-    extractUrl: (data) => data?.DownloadLink,
+    extractUrl: (data) =>
+      data?.DownloadLink ||
+      data?.downloadLink ||
+      data?.download ||
+      data?.result?.download ||
+      data?.results?.download,
   },
   {
     name: 'spotifydl2',
     url: process.env.SPOTIFY_DL2 || 'https://apis.davidcyril.name.ng/spotifydl2',
-    extractUrl: (data) => data?.results?.downloadMP3,
+    extractUrl: (data) =>
+      data?.result?.download ||
+      data?.results?.downloadMP3 ||
+      data?.results?.download ||
+      data?.download ||
+      data?.DownloadLink,
   },
 ]
 
@@ -114,19 +127,63 @@ const resolveCanonicalFromDeezer = async (query, hints = {}) => {
 const searchSpotifyCandidates = async (query) => {
   const apikey = process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x'
 
-  const { data } = await axios.get(SEARCH_URL, {
-    params: { apikey, query },
-    timeout: 12000,
-  })
+  let lastErr = null
+  for (const baseUrl of [...new Set(SEARCH_URLS)]) {
+    try {
+      const { data } = await axios.get(baseUrl, {
+        params: { apikey, query },
+        timeout: 12000,
+      })
 
-  if (!data?.success || !Array.isArray(data.results) || data.results.length === 0) {
-    throw new Error('No Spotify tracks found')
+      if (data?.success && Array.isArray(data.results) && data.results.length > 0) {
+        return data.results
+      }
+      lastErr = new Error('No Spotify tracks found')
+    } catch (err) {
+      lastErr = err
+      console.warn(`[spotify helper] search endpoint ${baseUrl} failed for "${query}": ${err.message}`)
+    }
   }
 
-  return data.results
+  throw lastErr || new Error('No Spotify tracks found')
 }
 
-const searchSpotifyTrack = async (query, hints = {}) => {
+const isAcceptableTrack = (track, expected) => {
+  if (!track) return false
+  if (UNWANTED_TITLE_RE.test(track.title || '')) return false
+  if (expected?.durationSec && track.durationSec) {
+    const diff = Math.abs(track.durationSec - expected.durationSec)
+    if (diff > 12) return false
+  }
+  return true
+}
+
+const rankSpotifyCandidates = (candidates, expected) => {
+  const mapped = candidates.map((track) => ({
+    title: track.title,
+    artist: track.artist,
+    duration: track.duration,
+    durationSec:
+      track.durationSec ?? parseDurationToSec(track.duration),
+    thumbnail: track.thumbnail || null,
+    spotifyUrl: track.spotifyUrl || track.url,
+  }))
+
+  const acceptable = mapped.filter((t) => isAcceptableTrack(t, expected))
+  if (acceptable.length === 0) return []
+
+  // Score all acceptable tracks; best score first.
+  // If nothing passes minScore, fall back to original order (MB first, then search order).
+  const best = pickBestTrack(acceptable, expected, { minScore: 130 })
+  if (!best) return acceptable
+
+  const rest = acceptable
+    .filter((t) => t.spotifyUrl !== best.spotifyUrl)
+    .sort((a, b) => scoreTrack(b, expected).total - scoreTrack(a, expected).total)
+  return [best, ...rest]
+}
+
+const findSpotifyCandidates = async (query, hints = {}) => {
   const parsed = parseQuery(query)
   const expected = await resolveCanonicalFromDeezer(query, {
     title: hints.title || parsed.title,
@@ -174,44 +231,21 @@ const searchSpotifyTrack = async (query, hints = {}) => {
     throw new Error('No Spotify tracks found')
   }
 
-  const isAcceptable = (track) => {
-    if (!track) return false
-    if (UNWANTED_TITLE_RE.test(track.title)) return false
-    if (expected.durationSec && track.durationSec) {
-      const diff = Math.abs(track.durationSec - expected.durationSec)
-      if (diff > 12) return false
-    }
-    return true
-  }
-
-  if (mbMatch?.spotifyUrl && isAcceptable(mbMatch)) {
-    console.info(
-      `[spotify helper] using MusicBrainz ISRC match → ${mbMatch.spotifyUrl}`
-    )
-    return {
-      title: mbMatch.title,
-      artist: mbMatch.artist,
-      thumbnail: null,
-      duration: mbMatch.duration,
-      spotifyUrl: mbMatch.spotifyUrl,
-    }
-  }
-
-  const mapped = candidates.map((track) => ({
-    title: track.title,
-    artist: track.artist,
-    duration: track.duration,
-    durationSec: parseDurationToSec(track.duration),
-    thumbnail: track.thumbnail,
-    spotifyUrl: track.url,
-  }))
-
-  const best = pickBestTrack(mapped, expected, { minScore: 130 })
-
-  const track = isAcceptable(best) ? best : mapped.find(isAcceptable)
-  if (!track?.spotifyUrl) {
+  const ranked = rankSpotifyCandidates(candidates, expected)
+  if (ranked.length === 0) {
     throw new Error('No official studio match in Spotify search results')
   }
+
+  console.info(
+    `[spotify helper] ranked ${ranked.length} candidates, top: "${ranked[0].title}" by ${ranked[0].artist} (${ranked[0].spotifyUrl})`
+  )
+
+  return { expected, ranked }
+}
+
+const searchSpotifyTrack = async (query, hints = {}) => {
+  const { ranked } = await findSpotifyCandidates(query, hints)
+  const track = ranked[0]
 
   console.info(
     `[spotify helper] picked "${track.title}" by ${track.artist} (score ${track._matchScore || 'n/a'})`
@@ -251,10 +285,10 @@ const fetchDownloadFromProvider = async (provider, spotifyUrl, signal) => {
 
     return {
       url: downloadUrl,
-      title: data.title || data.results?.title,
-      duration: data.duration || data.results?.duration,
-      thumbnail: data.thumbnail || data.results?.image,
-      format: 'mp3',
+      title: data.title || data.result?.title || data.results?.title,
+      duration: data.duration || data.result?.duration || data.results?.duration,
+      thumbnail: data.thumbnail || data.result?.cover || data.result?.image || data.results?.image,
+      format: data.result?.format || 'mp3',
       quality: '128kbps',
     }
   } catch (error) {
@@ -291,27 +325,55 @@ const getSpotifyDownloadUrl = async (spotifyUrl) => {
 
 const getSpotifyStreamUrl = async (query, hints = {}) => {
   const directUrl = extractSpotifyTrackUrl(query)
-  const meta = directUrl
-    ? { spotifyUrl: directUrl, title: null, artist: null, thumbnail: null, duration: null }
-    : await searchSpotifyTrack(query, hints)
-
-  const download = await getSpotifyDownloadUrl(meta.spotifyUrl)
-
-  return {
-    url: download.url,
-    title: download.title || meta.title,
-    artist: meta.artist,
-    duration: download.duration || meta.duration,
-    thumbnail: download.thumbnail || meta.thumbnail,
-    quality: download.quality,
-    format: download.format || 'mp3',
-    source: 'spotify',
-    spotifyUrl: meta.spotifyUrl,
+  if (directUrl) {
+    const download = await getSpotifyDownloadUrl(directUrl)
+    return {
+      url: download.url,
+      title: download.title,
+      artist: null,
+      duration: download.duration,
+      thumbnail: download.thumbnail,
+      quality: download.quality,
+      format: download.format || 'mp3',
+      source: 'spotify',
+      spotifyUrl: directUrl,
+    }
   }
+
+  const { ranked } = await findSpotifyCandidates(query, hints)
+
+  // Try each Spotify candidate until a download succeeds.
+  // This handles cases where the top (e.g. MusicBrainz ISRC) URL points at
+  // a compilation/region variant the download providers can't fetch.
+  const errors = []
+  for (const meta of ranked.slice(0, 4)) {
+    try {
+      console.info(`[spotify helper] trying download for ${meta.spotifyUrl} ("${meta.title}")`)
+      const download = await getSpotifyDownloadUrl(meta.spotifyUrl)
+      return {
+        url: download.url,
+        title: download.title || meta.title,
+        artist: meta.artist,
+        duration: download.duration || meta.duration,
+        thumbnail: download.thumbnail || meta.thumbnail,
+        quality: download.quality,
+        format: download.format || 'mp3',
+        source: 'spotify',
+        spotifyUrl: meta.spotifyUrl,
+      }
+    } catch (err) {
+      console.warn(`[spotify helper] download failed for ${meta.spotifyUrl}: ${err.message}`)
+      errors.push(`${meta.spotifyUrl}: ${err.message}`)
+    }
+  }
+
+  throw new Error(`Spotify download failed: ${errors.join('; ')}`)
 }
 
 module.exports = {
   getSpotifyStreamUrl,
+  getSpotifyDownloadUrl,
   searchSpotifyTrack,
+  findSpotifyCandidates,
   extractSpotifyTrackUrl,
 }

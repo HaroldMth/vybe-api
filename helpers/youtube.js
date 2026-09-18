@@ -9,7 +9,7 @@ const PROVIDERS = [
   },
   {
     name: 'GiftedTech',
-    url: 'https://api.giftedtech.co.ke/api/download/ytaudio',
+    url: 'https://api.gifted.co.ke/api/download/ytaudio',
     params: (videoUrl) => ({ apikey: process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x', url: videoUrl }),
   },
   {

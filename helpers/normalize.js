@@ -17,7 +17,10 @@ const track = (t) => ({
   explicit:     !!t.explicit_lyrics,
   chartPosition: t.position ?? null,
   artists: {
-    primary: [{ name: t.artist?.name || '' }],
+    primary: [{
+      id: t.artist?.id != null ? String(t.artist.id) : '',
+      name: t.artist?.name || '',
+    }],
   },
   image: images(
     t.album?.cover_small,
@@ -59,12 +62,15 @@ const album = (al) => ({
     al.cover_xl,
   ),
   artists: {
-    primary: al.artist ? [{ name: al.artist.name }] : [],
+    primary: al.artist ? [{
+      id: al.artist.id != null ? String(al.artist.id) : '',
+      name: al.artist.name || '',
+    }] : [],
   },
 })
 
 const genre = (g) => ({
-  id:      g.id,
+  id:      String(g.id),
   name:    g.name || '',
   picture: g.picture_medium || g.picture || '',
   pictureXl: g.picture_xl || g.picture_big || '',
