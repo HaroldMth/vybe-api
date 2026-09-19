@@ -17,6 +17,7 @@
     "express": "^4.18.2",
     "genius-lyrics": "^4.4.7",
     "genius-lyrics-api": "^3.2.1",
+    "searchtify": "^2.0.1",
     "soundcloud-scraper": "^5.0.3",
     "youtube-sr": "^4.3.12"
   },
