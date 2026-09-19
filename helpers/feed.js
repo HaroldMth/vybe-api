@@ -8,7 +8,6 @@ const { fetchAlbums } = require('./discography')
 const { withTimeout } = require('./http')
 const { norm, stripDecor } = require('./text')
 
-const DEFAULT_COUNTRY = (process.env.DEFAULT_COUNTRY || 'us').toLowerCase()
 const SPOTLIGHT = (process.env.HOME_SPOTLIGHT || 'africa,afro').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
 const RELEASE_WINDOW_DAYS = Number(process.env.NEW_RELEASE_DAYS) || 120
 
@@ -101,8 +100,8 @@ const build = async (country) => {
   // Wave 2: sections that need more calls. Slow ones time out; what they fetched stays cached for the next request.
   const [fresh, topSongs, topAlbums, spotlight] = await Promise.all([
     run('newReleases', () => newReleasesFrom(trendingArtists), 8000),
-    run(`topInCountry:${country}`, () => appleSongs(country), 9000),
-    run(`topAlbums:${country}`, () => appleAlbums(country), 9000),
+    country ? run(`topInCountry:${country}`, () => appleSongs(country), 9000) : null,
+    country ? run(`topAlbums:${country}`, () => appleAlbums(country), 9000) : null,
     run('spotlight', () => spotlightFor(genres), 6000),
   ])
 
@@ -133,20 +132,21 @@ const build = async (country) => {
 const pending = new Set()
 const lastScheduled = new Map()
 
-const getHome = async (country = DEFAULT_COUNTRY, depth = 0) => {
-  const cc = /^[a-z]{2}$/i.test(country) ? country.toLowerCase() : DEFAULT_COUNTRY
-  const key = `home:${cc}`
+// country: 2-letter code, or null/undefined for the country-less (global) page.
+const getHome = async (country = null, depth = 0) => {
+  const cc = /^[a-z]{2}$/i.test(country || '') ? country.toLowerCase() : null
+  const key = `home:${cc || 'global'}`
   // Cache 10 min; if a rebuild fails, serve the last good page for up to 6 h.
   const page = await memo(key, 10 * 60 * 1000, () => build(cc), { staleMs: 6 * 60 * 60 * 1000 })
 
   // A slow/failed section leaves a hole in the cached page. Re-check shortly after (max 2 times in a row),
   // when whatever timed out has usually finished and cached its data.
-  const recentlyTried = Date.now() - (lastScheduled.get(cc) || 0) < 5 * 60 * 1000
-  if (page.meta.failed.length && depth < 2 && !pending.has(cc) && (depth > 0 || !recentlyTried)) {
-    pending.add(cc)
-    lastScheduled.set(cc, Date.now())
+  const recentlyTried = Date.now() - (lastScheduled.get(key) || 0) < 5 * 60 * 1000
+  if (page.meta.failed.length && depth < 2 && !pending.has(key) && (depth > 0 || !recentlyTried)) {
+    pending.add(key)
+    lastScheduled.set(key, Date.now())
     setTimeout(() => {
-      pending.delete(cc)
+      pending.delete(key)
       memo.expire(key)
       getHome(cc, depth + 1).catch(() => {})
     }, 20000).unref()
@@ -154,6 +154,7 @@ const getHome = async (country = DEFAULT_COUNTRY, depth = 0) => {
   return page
 }
 
-const warm = () => getHome(DEFAULT_COUNTRY).catch((err) => console.warn('[home warm-up] failed:', err.message))
+// Warm the global page only; country pages are built on first request from that country.
+const warm = () => getHome(null).catch((err) => console.warn('[home warm-up] failed:', err.message))
 
-module.exports = { getHome, warm, DEFAULT_COUNTRY }
+module.exports = { getHome, warm }

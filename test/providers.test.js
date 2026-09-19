@@ -15,7 +15,6 @@ before(async () => {
     AUDIODB_BASE: mock.base,
     MUSICBRAINZ_BASE: mock.base,
     LASTFM_BASE: mock.base,
-    DEFAULT_COUNTRY: 'us',
     HOME_SPOTLIGHT: 'africa,afro',
   })
   delete process.env.LASTFM_KEY
@@ -47,7 +46,7 @@ test('resolveTrack rejects karaoke + wrong-artist hits and returns the real trac
 })
 
 test('home: legacy keys keep their shape, new sections are filled, playlists/editorial have images', async () => {
-  const r = await api.get('/home')
+  const r = await api.get('/home?country=us')
   assert.equal(r.status, 200)
   const d = r.data.data
   for (const k of ['trending', 'newReleases', 'playlists', 'artists', 'genres']) assert.ok(Array.isArray(d[k]) && d[k].length, k)
@@ -151,4 +150,29 @@ test('album: Deezer fields + Wikipedia description', async () => {
 test('lastfm.cleanBio strips the "Read more" link and its text', () => {
   const { cleanBio } = require('../helpers/providers/lastfm')
   assert.equal(cleanBio('Nice band. <a href="https://x">Read more on Last.fm</a>'), 'Nice band.')
+})
+
+test('country detection: query > x-country > cf-ipcountry > accept-language, and never a hardcoded default', () => {
+  const { detectCountry } = require('../helpers/country')
+  const req = (query = {}, headers = {}) => ({ query, get: (h) => headers[h.toLowerCase()] })
+  assert.deepEqual(detectCountry(req({ country: 'ZA' }, { 'x-country': 'ng' })), { country: 'za', source: 'query' })
+  assert.deepEqual(detectCountry(req({}, { 'x-country': 'ng', 'cf-ipcountry': 'ZA' })), { country: 'ng', source: 'header' })
+  assert.deepEqual(detectCountry(req({}, { 'cf-ipcountry': 'ZA', 'accept-language': 'en-US' })), { country: 'za', source: 'geoip' })
+  assert.deepEqual(detectCountry(req({}, { 'cf-ipcountry': 'XX', 'accept-language': 'en-ZA,en;q=0.9' })), { country: 'za', source: 'accept-language' })
+  assert.deepEqual(detectCountry(req({ country: 'zzz' }, { 'accept-language': 'en' })), { country: null, source: null })
+})
+
+test('home: no country detected -> country sections empty, no failures, no guessing', async () => {
+  const r = await api.get('/home')
+  assert.equal(r.status, 200)
+  assert.equal(r.data.meta.country, null)
+  assert.deepEqual(r.data.data.topInCountry, { country: null, songs: [] })
+  assert.ok(r.data.data.trending.length)
+  assert.deepEqual(r.data.meta.failed, [])
+})
+
+test('home: country from the phone (Accept-Language en-ZA) is picked up', async () => {
+  const r = await api.get('/home', { headers: { 'accept-language': 'en-ZA,en;q=0.9' } })
+  assert.equal(r.data.meta.country, 'za')
+  assert.equal(r.data.meta.countrySource, 'accept-language')
 })
