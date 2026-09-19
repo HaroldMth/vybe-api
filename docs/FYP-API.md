@@ -213,10 +213,11 @@ Deezer only exposes BPM per track (not in lists), so this scans the top 60 of th
 HTTP `200` for ok/degraded, `503` only when Deezer (core) is down, so it works as an uptime-monitor URL.
 
 ### Rate limits
-Per client IP, per minute, `429` with `Retry-After` and `X-RateLimit-*` headers.
-- **General** (all `/api`): 120/min. `/api/stream`, `/api/download`, `/api/health` are exempt.
-- **Heavy** (one shared budget of 20/min): `/api/fyp`, `/api/radar`, `/api/recommendations/*`, `/api/song/:id/related`, `/api/discovery/bpm`.
-- Caveat: keyed on `req.ip`; with `trust proxy` on, a client can spoof `X-Forwarded-For`. It stops buggy or greedy clients, not a determined attacker.
+**Off by default.** Turn on per-IP limits (per minute, `429` + `Retry-After` + `X-RateLimit-*` headers) with env vars:
+- `RATE_LIMIT_PER_MIN`: all `/api` (stream, download and health are always exempt).
+- `RATE_LIMIT_HEAVY_PER_MIN`: one shared budget for `/api/fyp`, `/api/radar`, `/api/recommendations/*`, `/api/song/:id/related`, `/api/discovery/bpm`.
+- Deezer's quota is protected either way by the server-side cache and request limiter (section 6).
+- Caveat: keyed on `req.ip`; with `trust proxy` on, a client can spoof `X-Forwarded-For`.
 
 ---
 
@@ -272,5 +273,5 @@ Client-side blending tips:
 | `HOME_SPOTLIGHT` | Comma-separated genre names to spotlight (default `africa,afro`) |
 | `NEW_RELEASE_DAYS` | Look-back window for `newReleases` (default 120) |
 | `MUSICBRAINZ_USER_AGENT` | Contact string Wikipedia/MusicBrainz ask for |
-| `RATE_LIMIT_PER_MIN` | General per-IP limit (default 120) |
-| `RATE_LIMIT_HEAVY_PER_MIN` | Shared limit for FYP/radar/recommendations/BPM (default 20) |
+| `RATE_LIMIT_PER_MIN` | Optional. General per-IP limit (off if unset) |
+| `RATE_LIMIT_HEAVY_PER_MIN` | Optional. Shared limit for FYP/radar/recommendations/BPM (off if unset) |

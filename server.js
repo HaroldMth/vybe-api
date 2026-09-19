@@ -7,12 +7,16 @@ app.set('trust proxy', true)
 app.use(cors())
 app.use(express.json())
 
-// Rate limits (per IP, per minute). Audio streaming/download are exempt: a single playback makes many range requests.
+// Rate limiting is OFF by default (the app makes lots of requests). Opt in per minute per IP with
+// RATE_LIMIT_PER_MIN (all /api) and/or RATE_LIMIT_HEAVY_PER_MIN (fyp, radar, recommendations, bpm).
+// Deezer quota is protected separately by the cache + request limiter in helpers/deezer.js.
 const { rateLimit } = require('./helpers/ratelimit')
-const general = Number(process.env.RATE_LIMIT_PER_MIN) || 120
-const heavy = Number(process.env.RATE_LIMIT_HEAVY_PER_MIN) || 20
-app.use('/api', rateLimit({ name: 'general', max: general, skip: (req) => /^\/(stream|download|health)(\/|$)/.test(req.path) }))
-const heavyLimit = rateLimit({ name: 'heavy', max: heavy })
+const general = Number(process.env.RATE_LIMIT_PER_MIN) || 0
+const heavy = Number(process.env.RATE_LIMIT_HEAVY_PER_MIN) || 0
+if (general) {
+  app.use('/api', rateLimit({ name: 'general', max: general, skip: (req) => /^\/(stream|download|health)(\/|$)/.test(req.path) }))
+}
+const heavyLimit = heavy ? rateLimit({ name: 'heavy', max: heavy }) : (req, res, next) => next()
 
 app.use('/api/health',   require('./routes/health'))
 app.use('/api/fyp',      heavyLimit, require('./routes/fyp'))
