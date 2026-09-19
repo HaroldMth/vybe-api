@@ -189,7 +189,7 @@ const scoreTrack = (candidate, expected = {}) => {
   }
 }
 
-const pickBestTrack = (candidates, expected = {}, { minScore = 80 } = {}) => {
+const pickBestTrack = (candidates, expected = {}, { minScore = 80, quiet = false } = {}) => {
   if (!Array.isArray(candidates) || candidates.length === 0) return null
 
   const ranked = candidates
@@ -202,7 +202,7 @@ const pickBestTrack = (candidates, expected = {}, { minScore = 80 } = {}) => {
   const best = ranked[0]
 
   // Log scoring so mismatches are easy to spot in server logs
-  console.info(
+  if (!quiet) console.info(
     `[trackMatch] top candidates for "${expected.title} - ${expected.artist}":\n` +
     ranked.slice(0, 3).map((r, i) =>
       `  #${i + 1} [${r.score.total}] "${r.candidate.title}" (title:${r.score.titlePoints} artist:${r.score.artistPoints} dur:${r.score.durationPoints})`

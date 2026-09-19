@@ -102,6 +102,11 @@ const getSpotifyUrlFromIsrc = async (isrc, retries = 1) => {
       cacheSet(isrc, null)
       return null
     } catch (err) {
+      if (err.response?.status === 404) {
+        // MusicBrainz answers 404 for an ISRC it doesn't know. That's a final answer, not a failure.
+        cacheSet(isrc, null)
+        return null
+      }
       lastErr = err
       const code = err.code || err.name || 'UNKNOWN'
       console.warn(`[spotify resolve] MusicBrainz attempt ${attempt + 1} failed (${code}): ${err.message || '(no message)'}`)

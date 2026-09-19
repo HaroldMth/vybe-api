@@ -2,6 +2,11 @@ const axios = require('axios')
 const { get } = require('./deezer')
 const { parseQuery, parseDurationToSec, pickBestTrack, scoreTrack, UNWANTED_TITLE_RE } = require('./trackMatch')
 const { resolveSpotifyViaMusicBrainz } = require('./spotifyResolve')
+const searchtify = require('./searchtify')
+const { stripDecor } = require('./text')
+
+// exact title + exact artist + matching duration scores ~275 in trackMatch; at/above this we stop searching.
+const CONFIDENT_SCORE = 250
 
 const SPOTIFY_TRACK_RE = /open\.spotify\.com\/track\/([a-zA-Z0-9]+)/
 
@@ -125,6 +130,16 @@ const resolveCanonicalFromDeezer = async (query, hints = {}) => {
 }
 
 const searchSpotifyCandidates = async (query) => {
+  // 1) searchtify (primary)
+  try {
+    const results = await searchtify.searchTracks(query)
+    if (results.length > 0) return results
+    console.info(`[spotify helper] searchtify found nothing for "${query}", trying Gifted`)
+  } catch (err) {
+    console.warn(`[spotify helper] searchtify failed for "${query}": ${err.message}`)
+  }
+
+  // 2) Gifted API (fallback)
   const apikey = process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x'
 
   let lastErr = null
@@ -158,7 +173,7 @@ const isAcceptableTrack = (track, expected) => {
   return true
 }
 
-const rankSpotifyCandidates = (candidates, expected) => {
+const rankSpotifyCandidates = (candidates, expected, { quiet = false } = {}) => {
   const mapped = candidates.map((track) => ({
     title: track.title,
     artist: track.artist,
@@ -174,7 +189,7 @@ const rankSpotifyCandidates = (candidates, expected) => {
 
   // Score all acceptable tracks; best score first.
   // If nothing passes minScore, fall back to original order (MB first, then search order).
-  const best = pickBestTrack(acceptable, expected, { minScore: 130 })
+  const best = pickBestTrack(acceptable, expected, { minScore: 130, quiet })
   if (!best) return acceptable
 
   const rest = acceptable
@@ -192,46 +207,65 @@ const findSpotifyCandidates = async (query, hints = {}) => {
     deezerId: hints.deezerId,
   })
 
+  // First query drops "(feat. ...)" / "- Remastered" noise: Spotify's search matches the plain title better.
   const searchQueries = [
-    expected.artist && expected.title ? `${expected.artist} ${expected.title}` : null,
+    expected.artist && expected.title ? `${expected.artist} ${stripDecor(expected.title) || expected.title}` : null,
     expected.title && expected.artist ? `${expected.title} ${expected.artist}` : null,
     query,
   ].filter(Boolean)
+  const [firstQuery, ...otherQueries] = [...new Set(searchQueries)]
 
   const seenUrls = new Set()
   const candidates = []
-
-  const mbMatch = await resolveSpotifyViaMusicBrainz({
-    deezerId: expected.deezerId || hints.deezerId,
-    isrc: expected.isrc,
-    title: expected.title,
-    artist: expected.artist,
-    durationSec: expected.durationSec,
-  })
-  if (mbMatch?.spotifyUrl) {
-    seenUrls.add(mbMatch.spotifyUrl)
-    candidates.push(mbMatch)
-  }
-
-  for (const searchQuery of [...new Set(searchQueries)]) {
+  const addAll = (results) =>
+    results.forEach((track) => {
+      if (!track?.url || seenUrls.has(track.url)) return
+      seenUrls.add(track.url)
+      candidates.push(track)
+    })
+  const runSearch = async (searchQuery) => {
     console.info(`[spotify helper] searching for "${searchQuery}"`)
     try {
-      const results = await searchSpotifyCandidates(searchQuery)
-      results.forEach((track) => {
-        if (!track?.url || seenUrls.has(track.url)) return
-        seenUrls.add(track.url)
-        candidates.push(track)
-      })
+      addAll(await searchSpotifyCandidates(searchQuery))
     } catch (err) {
       console.warn(`[spotify helper] search failed for "${searchQuery}": ${err.message}`)
     }
+  }
+  // True when the best candidate so far is a confident match (stop searching).
+  const confident = () => rankSpotifyCandidates(candidates, expected, { quiet: true })[0]?._matchScore >= CONFIDENT_SCORE
+
+  // 1) fast path: one search is usually enough
+  await runSearch(firstQuery)
+  let done = confident()
+
+  // 2) MusicBrainz ISRC link: exact but slow (1 req/s), so only when the search wasn't conclusive
+  if (!done) {
+    const mbMatch = await resolveSpotifyViaMusicBrainz({
+      deezerId: expected.deezerId || hints.deezerId,
+      isrc: expected.isrc,
+      title: expected.title,
+      artist: expected.artist,
+      durationSec: expected.durationSec,
+    })
+    if (mbMatch?.spotifyUrl && !seenUrls.has(mbMatch.spotifyUrl)) {
+      seenUrls.add(mbMatch.spotifyUrl)
+      candidates.unshift(mbMatch)
+    }
+    done = confident()
+  }
+
+  // 3) remaining query variants
+  for (const searchQuery of otherQueries) {
+    if (done) break
+    await runSearch(searchQuery)
+    done = confident()
   }
 
   if (candidates.length === 0) {
     throw new Error('No Spotify tracks found')
   }
 
-  const ranked = rankSpotifyCandidates(candidates, expected)
+  const ranked = rankSpotifyCandidates(candidates, expected) // logs the top candidates once
   if (ranked.length === 0) {
     throw new Error('No official studio match in Spotify search results')
   }

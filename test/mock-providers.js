@@ -14,6 +14,7 @@ const A = { id: 1, name: 'Coldplay' }
 const B = { id: 2, name: 'Keane' }
 const C = { id: 3, name: 'Tems' }
 
+const RUN_ID = Date.now()
 const calls = {}
 const hit = (k) => { calls[k] = (calls[k] || 0) + 1; return calls[k] }
 
@@ -28,6 +29,8 @@ const routes = {
   '/radio/top': () => ({ data: [{ id: 30, title: 'Hits Radio', picture_medium: 'rm' }] }),
   '/chart/2/tracks': () => ({ data: [trk(20, 'Afro Hit', C)] }),
   '/chart/2/artists': () => ({ data: [art(3, 'Tems')] }),
+  '/track/77': () => trk(77, 'Yellow', A, { isrc: `TESTNOTFOUND${RUN_ID}` }),
+  '/track/78': () => trk(78, 'Van Dale (feat. Philly & MocroManiac)', { id: 9, name: 'Woody' }, { isrc: `TESTFEAT${RUN_ID}` }),
   '/track/10': () => trk(10, 'Trend One', A, { bpm: 152 }),
   '/track/11': () => trk(11, 'Trend Two', C, { bpm: 0 }),
   '/api/v2/us/music/most-played/10/songs.json': () => { const e = new Error('nope'); e.status = 404; throw e },
