@@ -15,7 +15,7 @@ const data = (res) => res?.data || []
 
 const newReleasesFrom = async (artists) => {
   const cutoff = Date.now() - RELEASE_WINDOW_DAYS * 86400000
-  const lists = await mapSoft(artists.slice(0, 12), (a) => fetchAlbums(a.id), 3)
+  const lists = await mapSoft(artists.slice(0, 12), (a) => fetchAlbums(a.id, a), 3)
   const seen = new Set()
   return lists
     .flatMap((list) => list || [])

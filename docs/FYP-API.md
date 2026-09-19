@@ -152,6 +152,74 @@ Order: Last.fm similar artists first (only with `LASTFM_KEY`, resolved to Deezer
 
 ---
 
+## 5b. For You, release radar, tempo lanes, search, health
+
+### `GET|POST /api/fyp`: one call, blended For You feed
+
+```
+GET  /api/fyp?tracks=1,2,3&artists=4,5&played=9,8,7&country=za&limit=30
+POST /api/fyp   { "tracks": [], "artists": [], "played": [], "country": "za", "limit": 30 }   // better for long lists
+```
+| Field | Meaning |
+|---|---|
+| `tracks` | recent plays / likes, **most recent first** (max 6; the first 3 become "because you listened to" seeds) |
+| `artists` | followed / most-played artists (max 6): first 2 give radio, first 1 gives "fans also like", all give new releases |
+| `played` | IDs to hide (max 300). Seed tracks are hidden automatically |
+| `country`, `limit` | same detection as `/api/home`; `limit` 1 to 60, default 30 |
+
+```jsonc
+{ "success": true,
+  "data": {
+    "feed": [ { ...Track, "reason": "Because you listened to Yellow" } ],   // one blended list
+    "rows": [                                                              // ready-made shelves
+      { "id": "because-3135556", "type": "tracks",  "title": "Because you listened to ..", "seed": {"type":"track","id":".."}, "items": [Track] },
+      { "id": "new-releases",     "type": "albums",  "title": "New from artists you follow", "items": [Album] },
+      { "id": "artists-like",     "type": "artists", "title": "Fans of X also like", "items": [Artist] },
+      { "id": "radio-27",         "type": "tracks",  "title": "X radio", "items": [Track] },
+      { "id": "trending",         "type": "tracks",  "title": "Trending in your country", "items": [Track] } ] },
+  "meta": { "personalized": true, "seeds": {"tracks": [".."], "artists": [".."]}, "country": "za", "countrySource": "query", "failed": [] } }
+```
+- **Cold start** (no valid IDs): `personalized: false`, one `trending` row and a trending feed.
+- **Blend**: each row's items score `weight x rank position` (because = 1.0 divided by `1 + 0.5 x seed index`, artist radio = 0.45, trending = 0.2); a track suggested by several signals gets +0.25 each time; duplicates collapse; max 3 per artist; `reason` is the strongest signal.
+- Rows that time out (9s) are skipped and listed in `meta.failed`. First call for brand-new seeds can take a few seconds (many Deezer lookups); repeats are cached.
+
+### `GET|POST /api/radar`: new releases from followed artists
+`GET /api/radar?artists=1,2,3&days=60&limit=30`, newest first, de-duplicated, future dates excluded.
+```json
+{ "success": true, "data": { "releases": [Album], "checked": 3, "pending": 0, "failed": ["99999"] } }
+```
+`pending > 0` = ran out of time (8s), call again to continue from cache. `failed` = artist IDs that errored. Max 30 artists, `days` 1 to 365.
+
+### `GET /api/discovery/bpm`: tempo lanes
+```
+GET /api/discovery/bpm/lanes                         -> chill 60-95, focus 95-115, workout 120-150, running 150-185
+GET /api/discovery/bpm?lane=running&limit=20         (or ?min=120&max=150, optional &genre=<deezer genre id>, default 0)
+```
+```json
+{ "success": true, "data": { "lane": {..}, "songs": [ { ...Track, "bpm": 152 } ], "range": {"min":150,"max":185}, "scanned": 58, "pending": 2, "noBpm": 9 } }
+```
+Deezer only exposes BPM per track (not in lists), so this scans the top 60 of that genre's chart one by one. `noBpm` = tracks Deezer has no tempo for (reported as 0, skipped). `pending > 0` = partial, repeat the call. Deezer BPMs are sometimes half/double time, so treat lanes as a guide.
+
+### Search extras
+- `GET /api/search/suggest?q=cold` -> `{ suggestions: [ { type: "artist"|"song"|"album", id, text, subtitle, image } ] }` (max 8; `q` needs 2+ chars; debounce on the client).
+- `GET /api/search?q=..` now also returns `top`: `{ type: "artist"|"album"|"song", item }` (exact artist > exact album > exact song title > first song), or `null`.
+
+### `GET /api/health` and `GET /api/health/providers`
+`/api/health` = process alive. `/api/health/providers` pings Deezer, Apple, Wikipedia, AudioDB, MusicBrainz and Last.fm (cached 60 s):
+```json
+{ "success": true, "status": "ok|degraded|down", "checkedAt": "..",
+  "providers": [ { "id": "deezer", "role": "..", "status": "up|down|not_configured", "latencyMs": 120, "error": "only when down" } ] }
+```
+HTTP `200` for ok/degraded, `503` only when Deezer (core) is down, so it works as an uptime-monitor URL.
+
+### Rate limits
+Per client IP, per minute, `429` with `Retry-After` and `X-RateLimit-*` headers.
+- **General** (all `/api`): 120/min. `/api/stream`, `/api/download`, `/api/health` are exempt.
+- **Heavy** (one shared budget of 20/min): `/api/fyp`, `/api/radar`, `/api/recommendations/*`, `/api/song/:id/related`, `/api/discovery/bpm`.
+- Caveat: keyed on `req.ip`; with `trust proxy` on, a client can spoof `X-Forwarded-For`. It stops buggy or greedy clients, not a determined attacker.
+
+---
+
 ## 6. Data shapes
 
 ```jsonc
@@ -176,7 +244,7 @@ Order: Last.fm similar artists first (only with `LASTFM_KEY`, resolved to Deezer
 
 ## 7. Building a For You page in the app (recommended recipe)
 
-The API doesn't know the user, so the app supplies the seeds. Suggested rows, each one call:
+**Easiest: one call to `POST /api/fyp`** (section 5b) with the app's recent plays and followed artists. It returns ready-made rows and a blended feed. Or assemble it yourself, one call per row:
 
 | Row | Call |
 |---|---|
@@ -192,7 +260,7 @@ Client-side blending tips:
 - Interleave rows rather than concatenating, drop anything already played, and re-apply a per-artist cap (3) across the whole page.
 - Fall back to `home.trending` for brand-new users with no history.
 
-*Not implemented server-side (yet)*: per-user profiles, skip/like feedback, and a single `/api/fyp` endpoint that does this blending for you.
+*Not implemented server-side (yet)*: stored per-user profiles and skip/like feedback. The app keeps the history and sends it with each `/api/fyp` call.
 
 ---
 
@@ -204,3 +272,5 @@ Client-side blending tips:
 | `HOME_SPOTLIGHT` | Comma-separated genre names to spotlight (default `africa,afro`) |
 | `NEW_RELEASE_DAYS` | Look-back window for `newReleases` (default 120) |
 | `MUSICBRAINZ_USER_AGENT` | Contact string Wikipedia/MusicBrainz ask for |
+| `RATE_LIMIT_PER_MIN` | General per-IP limit (default 120) |
+| `RATE_LIMIT_HEAVY_PER_MIN` | Shared limit for FYP/radar/recommendations/BPM (default 20) |

@@ -17,7 +17,7 @@ router.get('/:id', async (req, res) => {
 
     const [topTracks, albumList, related, radio, extra] = await Promise.all([
       soft(`/artist/${id}/top`, { limit: 20 }),
-      fetchAlbums(id).catch(() => []),
+      fetchAlbums(id, info).catch(() => []),
       getRelatedArtists({ artistId: id, artist: normalizedInfo.name, limit: 12 }).catch(() => []),
       soft(`/artist/${id}/radio`, { limit: 20 }),
       getArtistBio(normalizedInfo.name).catch((err) => {

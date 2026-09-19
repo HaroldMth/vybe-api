@@ -28,21 +28,26 @@ const routes = {
   '/radio/top': () => ({ data: [{ id: 30, title: 'Hits Radio', picture_medium: 'rm' }] }),
   '/chart/2/tracks': () => ({ data: [trk(20, 'Afro Hit', C)] }),
   '/chart/2/artists': () => ({ data: [art(3, 'Tems')] }),
+  '/track/10': () => trk(10, 'Trend One', A, { bpm: 152 }),
+  '/track/11': () => trk(11, 'Trend Two', C, { bpm: 0 }),
+  '/api/v2/us/music/most-played/10/songs.json': () => { const e = new Error('nope'); e.status = 404; throw e },
   '/artist/1': () => art(1, 'Coldplay'),
   '/artist/1/albums': () => ({
     total: 2,
     data: [
-      { id: 801, title: 'Old One', release_date: '2011-01-01', record_type: 'album', artist: art(1, 'Coldplay'), cover_medium: 'c1' },
-      { id: 802, title: 'Fresh Single', release_date: daysAgo(10), record_type: 'single', artist: art(1, 'Coldplay'), cover_medium: 'c2' },
+      { id: 801, title: 'Old One', release_date: '2011-01-01', record_type: 'album', cover_medium: 'c1' },
+      { id: 802, title: 'Fresh Single', release_date: daysAgo(10), record_type: 'single', cover_medium: 'c2' },
     ],
   }),
-  '/artist/3/albums': () => ({ total: 1, data: [{ id: 803, title: 'Tems Single', release_date: daysAgo(5), record_type: 'single', artist: art(3, 'Tems'), cover_medium: 'c3' }] }),
+  '/artist/3/albums': () => ({ total: 1, data: [{ id: 803, title: 'Tems Single', release_date: daysAgo(5), record_type: 'single', cover_medium: 'c3' }] }),
   '/artist/1/top': () => ({ data: [trk(101, 'Yellow', A), trk(102, 'Clocks', A), trk(103, 'Fix You', A), trk(104, 'Magic', A)] }),
   '/artist/2/top': () => ({ data: [trk(201, 'Somewhere Only We Know', B), trk(202, 'Everybody Changing', B), trk(203, 'Bedshaped', B), trk(204, 'Crystal Ball', B)] }),
   '/artist/3/top': () => ({ data: [trk(301, 'Free Mind', C), trk(302, 'Yellow (Karaoke Version)', C)] }),
   '/artist/1/related': () => ({ data: [art(2, 'Keane'), art(3, 'Tems')] }),
   '/artist/1/radio': () => ({ data: [trk(201, 'Somewhere Only We Know', B), trk(401, 'Yellow - Karaoke Version', { id: 9, name: 'Karaoke Kings' })] }),
   '/artist/2': () => art(2, 'Keane'),
+  '/artist/3': () => art(3, 'Tems'),
+  '/artist/4/albums': () => ({ total: 0, data: [] }),
   '/track/100': () => trk(100, 'Yellow', A, {
     isrc: 'GBAYE0000567', bpm: 173, release_date: '2000-06-26', track_position: 5, disk_number: 1, link: 'https://dz/100',
     contributors: [{ id: 1, name: 'Coldplay', role: 'Main', picture_medium: 'pc' }],
@@ -89,7 +94,7 @@ const routes = {
   // ---- AudioDB
   '/search.php': (q) => (/keane/i.test(q.s)
     ? { artists: [{ idArtist: '77', strArtist: 'Keane', strBiographyEN: 'Keane are an English rock band formed in Battle, East Sussex in 1995.', strGenre: 'Alternative Rock', strCountry: 'England', intFormedYear: '1995', strArtistBanner: 'https://a/banner.jpg' }] }
-    : { artists: null }),
+    : /coldplay/i.test(q.s) ? { artists: [{ idArtist: '1', strArtist: 'Coldplay' }] } : { artists: null }),
   '/searchalbum.php': () => ({ album: null }),
   // ---- MusicBrainz
   '/artist': (q) => ({ artists: [{ id: 'mb-1', score: 100, name: /keane/i.test(q.query) ? 'Keane' : 'Coldplay', country: 'GB', type: 'Group', 'life-span': { begin: '1997', ended: false }, tags: [{ name: 'britpop', count: 3 }] }] }),
@@ -105,7 +110,7 @@ const start = () => new Promise((resolve) => {
     if (url.pathname.startsWith('/api/v2/gb/')) { res.statusCode = 500; return res.end('boom') }
     if (!handler) { res.statusCode = 404; return res.end('{}') }
     res.setHeader('content-type', 'application/json')
-    res.end(JSON.stringify(handler(q)))
+    try { res.end(JSON.stringify(handler(q))) } catch (e) { res.statusCode = e.status || 500; res.end('{}') }
   })
   server.listen(0, '127.0.0.1', () => resolve({ server, base: `http://127.0.0.1:${server.address().port}`, calls }))
 })

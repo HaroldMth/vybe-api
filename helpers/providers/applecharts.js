@@ -32,4 +32,9 @@ const chart = (type = 'songs', country = 'us', limit = 25) => {
   }, { staleMs: 24 * 60 * 60 * 1000 })
 }
 
-module.exports = { chart }
+const ping = async () => {
+  const { data } = await http.get('/api/v2/us/music/most-played/10/songs.json')
+  if (!data?.feed?.results?.length) throw new Error('empty chart')
+}
+
+module.exports = { chart, ping }

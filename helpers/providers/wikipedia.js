@@ -81,4 +81,9 @@ const getAlbumSummary = (rawAlbumName, artistName) => {
   }, { staleMs: 30 * DAY })
 }
 
-module.exports = { getArtistSummary, getAlbumSummary }
+const ping = async () => {
+  const { data } = await http.get('/w/api.php', { params: { action: 'query', meta: 'siteinfo', format: 'json' } })
+  if (!data?.query) throw new Error('unexpected Wikipedia response')
+}
+
+module.exports = { getArtistSummary, getAlbumSummary, ping }

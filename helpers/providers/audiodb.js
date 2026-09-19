@@ -24,4 +24,9 @@ const album = (albumName, artistName) =>
       }, { staleMs: 30 * DAY })
     : Promise.resolve(null)
 
-module.exports = { artist, album }
+const ping = async () => {
+  const { data } = await http.get('/search.php', { params: { s: 'coldplay' } })
+  if (!data?.artists) throw new Error('unexpected AudioDB response')
+}
+
+module.exports = { artist, album, ping }

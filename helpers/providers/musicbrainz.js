@@ -41,4 +41,9 @@ const albumGroup = (albumName, artistName) =>
       }, { staleMs: 30 * DAY })
     : Promise.resolve(null)
 
-module.exports = { artist, albumGroup }
+const ping = async () => {
+  const { data } = await http.get('/artist', { params: { query: 'coldplay', fmt: 'json', limit: 1 } })
+  if (!data?.artists) throw new Error('unexpected MusicBrainz response')
+}
+
+module.exports = { artist, albumGroup, ping }

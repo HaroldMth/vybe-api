@@ -79,4 +79,24 @@ const mapSoft = async (items, fn, size = 5) => {
   return out
 }
 
-module.exports = { resolveTrack, resolveArtist, resolveAlbum, mapSoft, pickTrack }
+// Like mapSoft, but stops taking new work after `ms` and returns what it has:
+//   results[i]: value | null (failed) | undefined (not reached). Finished lookups stay cached, so a retry continues where this stopped.
+const mapSoftDeadline = async (items, fn, { size = 5, ms = 7000 } = {}) => {
+  const results = new Array(items.length).fill(undefined)
+  let next = 0
+  let cancelled = false
+  const worker = async () => {
+    while (!cancelled && next < items.length) {
+      const i = next++
+      try { results[i] = await fn(items[i], i) } catch { results[i] = null }
+    }
+  }
+  let timer
+  const deadline = new Promise((resolve) => { timer = setTimeout(resolve, ms) })
+  await Promise.race([Promise.all(Array.from({ length: Math.min(size, items.length) }, worker)), deadline])
+  clearTimeout(timer)
+  cancelled = true
+  return { results, pending: results.filter((r) => r === undefined).length }
+}
+
+module.exports = { resolveTrack, resolveArtist, resolveAlbum, mapSoft, mapSoftDeadline, pickTrack }

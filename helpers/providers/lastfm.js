@@ -46,4 +46,11 @@ const tagTracks = async (tag, limit = 20) => {
   return (data?.tracks?.track || []).map((t) => ({ name: t.name, artist: t.artist?.name || '' }))
 }
 
-module.exports = { enabled, cleanBio, artistInfo, trackInfo, similarTracks, similarArtists, tagTracks }
+const ping = async () => {
+  const { data } = await http.get('/', {
+    params: { method: 'chart.gettopartists', api_key: process.env.LASTFM_KEY, format: 'json', limit: 1 },
+  })
+  if (data?.error) throw new Error(data.message || 'Last.fm error')
+}
+
+module.exports = { ping, enabled, cleanBio, artistInfo, trackInfo, similarTracks, similarArtists, tagTracks }

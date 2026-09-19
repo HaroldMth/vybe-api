@@ -47,4 +47,9 @@ const get = (path, params = {}, { ttl } = {}) =>
 // Same as get() but resolves to null instead of throwing (for optional sections).
 const soft = (path, params = {}, opts) => get(path, params, opts).catch(() => null)
 
-module.exports = { get, soft, DeezerError }
+const ping = async () => {
+  const { data } = await dz.get('/chart/0/tracks', { params: { limit: 1 } })
+  if (data?.error || !Array.isArray(data?.data)) throw new Error('unexpected Deezer response')
+}
+
+module.exports = { get, soft, ping, DeezerError }
