@@ -25,4 +25,8 @@ app.use('/api/discovery', require('./routes/discovery'))
 app.get('/', (req, res) => res.json({ app: 'VYBE API', status: 'running' }))
 
 const PORT = process.env.PORT || 4000
-app.listen(PORT, () => console.log(`VYBE API running on port ${PORT}`))
+app.listen(PORT, () => {
+  console.log(`VYBE API running on port ${PORT}`)
+  // Pre-build the home feed so the first visitor doesn't pay for a cold cache.
+  require('./helpers/feed').warm()
+})

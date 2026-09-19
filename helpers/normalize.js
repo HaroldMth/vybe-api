@@ -16,6 +16,8 @@ const track = (t) => ({
   duration:     t.duration || 0,
   explicit:     !!t.explicit_lyrics,
   chartPosition: t.position ?? null,
+  previewUrl:   t.preview || null,
+  rank:         t.rank ?? null,
   artists: {
     primary: [{
       id: t.artist?.id != null ? String(t.artist.id) : '',
@@ -56,10 +58,10 @@ const album = (al) => ({
   releaseDate: al.release_date || null,
   explicit:    !!al.explicit_lyrics,
   image: images(
-    al.cover_small,
-    al.cover_medium,
-    al.cover_big,
-    al.cover_xl,
+    al.cover_small  || al.picture_small,
+    al.cover_medium || al.picture_medium,
+    al.cover_big    || al.picture_big,
+    al.cover_xl     || al.picture_xl,
   ),
   artists: {
     primary: al.artist ? [{
@@ -82,11 +84,28 @@ const playlist = (p) => ({
   description: p.description || '',
   nbTracks:    p.nb_tracks ?? null,
   image: images(
-    p.picture_small,
-    p.picture_medium,
-    p.picture_big,
-    p.picture_xl,
+    p.picture_small  || p.cover_small,
+    p.picture_medium || p.cover_medium,
+    p.picture_big    || p.cover_big,
+    p.picture_xl     || p.cover_xl,
   ),
 })
 
-module.exports = { track, artist, album, genre, playlist }
+const radio = (r) => ({
+  id:    String(r.id),
+  name:  r.title || r.name || '',
+  image: images(r.picture_small, r.picture_medium, r.picture_big, r.picture_xl),
+})
+
+// Deezer tags most objects with `type`; use it when a list can mix kinds (e.g. editorial selection).
+const auto = (o) => {
+  switch (o?.type) {
+    case 'album':    return { kind: 'album',    ...album(o) }
+    case 'playlist': return { kind: 'playlist', ...playlist(o) }
+    case 'artist':   return { kind: 'artist',   ...artist(o) }
+    case 'track':    return { kind: 'track',    ...track(o) }
+    default:         return { kind: o?.type || 'unknown', ...(o?.cover_medium ? album(o) : playlist(o)) }
+  }
+}
+
+module.exports = { track, artist, album, genre, playlist, radio, auto }

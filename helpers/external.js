@@ -1,167 +1,114 @@
+// Metadata composition: artist bios, album info, music videos.
+// Each provider is optional; slow ones are capped so a page never waits on them for long.
 const axios = require('axios')
+const wikipedia = require('./providers/wikipedia')
+const audiodb = require('./providers/audiodb')
+const musicbrainz = require('./providers/musicbrainz')
+const lastfm = require('./providers/lastfm')
+const { withTimeout } = require('./http')
+const { norm } = require('./text')
 
-const USER_AGENT = process.env.MUSICBRAINZ_USER_AGENT || 'VYBE/1.0.0 (https://example.com)'
-
-const lastfm = axios.create({
-  baseURL: 'https://ws.audioscrobbler.com/2.0/',
-  timeout: 7000,
-})
-
-const audioDb = axios.create({
-  baseURL: `https://www.theaudiodb.com/api/v1/json/${process.env.AUDIODB_KEY || '2'}`,
-  timeout: 7000,
-})
-
-const musicBrainz = axios.create({
-  baseURL: 'https://musicbrainz.org/ws/2',
-  timeout: 7000,
-  headers: {
-    'User-Agent': USER_AGENT,
-  },
-})
-
-const itunes = axios.create({
-  baseURL: 'https://itunes.apple.com',
-  timeout: 7000,
-})
+const itunes = axios.create({ baseURL: 'https://itunes.apple.com', timeout: 7000 })
 
 const cleanText = (value = '') =>
-  String(value)
-    .replace(/<[^>]+>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  String(value).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
 
-const getLastfm = async (method, params = {}) => {
-  if (!process.env.LASTFM_KEY) return null
+const withHttps = (url) => (url ? `https://${String(url).replace(/^https?:\/\//, '')}` : null)
 
-  const { data } = await lastfm.get('/', {
-    params: {
-      method,
-      api_key: process.env.LASTFM_KEY,
-      format: 'json',
-      autocorrect: 1,
-      ...params,
-    },
-  })
+// Providers keep running after the timeout and fill their caches, so the next request is instant.
+const settle = (promise, ms) => withTimeout(Promise.resolve(promise), ms, 'provider').catch(() => null)
 
-  if (data?.error) throw new Error(data.message || 'Last.fm request failed')
-  return data
-}
+const NOISE_TAG_RE = /^(seen live|favou?rites?|awesome|albums? i own|under \d+ listeners)$/i
 
-const getArtistBio = async (artistName) => {
+const getArtistBio = async (artistName, { timeoutMs = 4500 } = {}) => {
   if (!artistName) return null
 
-  const [lastfmResult, audioDbResult, musicBrainzResult] = await Promise.allSettled([
-    getLastfm('artist.getinfo', { artist: artistName }),
-    audioDb.get('/search.php', { params: { s: artistName } }),
-    musicBrainz.get('/artist', {
-      params: {
-        query: `artist:"${artistName}"`,
-        fmt: 'json',
-        limit: 1,
-      },
-    }),
+  const [wiki, adb, mb, lfm] = await Promise.all([
+    settle(wikipedia.getArtistSummary(artistName), timeoutMs),
+    settle(audiodb.artist(artistName), timeoutMs),
+    settle(musicbrainz.artist(artistName), timeoutMs),
+    settle(lastfm.artistInfo(artistName), timeoutMs),
   ])
 
-  const lastfmArtist = lastfmResult.status === 'fulfilled' ? lastfmResult.value?.artist : null
-  const audioArtist = audioDbResult.status === 'fulfilled' ? audioDbResult.value?.data?.artists?.[0] : null
-  const mbArtist = musicBrainzResult.status === 'fulfilled' ? musicBrainzResult.value?.data?.artists?.[0] : null
+  const bios = [
+    { source: 'wikipedia', text: cleanText(wiki?.extract) },
+    { source: 'theaudiodb', text: cleanText(adb?.strBiographyEN) },
+    { source: 'lastfm', text: lastfm.cleanBio(lfm?.bio?.summary) },
+  ]
+  const bio = bios.find((b) => b.text.length > 40) || { source: null, text: '' }
+
+  const seen = new Set()
+  const genres = [
+    adb?.strGenre,
+    adb?.strStyle,
+    ...(lfm?.tags?.tag || []).map((t) => t.name),
+    ...(mb?.tags || []),
+  ]
+    .filter((g) => g && !NOISE_TAG_RE.test(g))
+    .filter((g) => (seen.has(norm(g)) ? false : seen.add(norm(g))))
+    .slice(0, 8)
 
   return {
-    bio: cleanText(audioArtist?.strBiographyEN || lastfmArtist?.bio?.summary || ''),
-    country: audioArtist?.strCountry || mbArtist?.country || null,
-    formedYear: audioArtist?.intFormedYear || mbArtist?.['life-span']?.begin?.slice(0, 4) || null,
-    disbandedYear: audioArtist?.intDiedYear || mbArtist?.['life-span']?.end?.slice(0, 4) || null,
-    genres: [
-      audioArtist?.strGenre,
-      audioArtist?.strStyle,
-      ...(lastfmArtist?.tags?.tag || []).map((tag) => tag.name),
-    ].filter(Boolean).filter((value, index, list) => list.indexOf(value) === index).slice(0, 8),
+    bio: bio.text,
+    bioSource: bio.source,
+    country: adb?.strCountry || mb?.country || null,
+    countryCode: mb?.country || null,
+    type: mb?.type || null,
+    formedYear: adb?.intFormedYear || mb?.begin?.slice(0, 4) || null,
+    disbandedYear: adb?.intDiedYear || (mb?.ended ? mb.end?.slice(0, 4) : null) || null,
+    genres,
+    images: {
+      wikipedia: wiki?.thumbnail || null,
+      banner: adb?.strArtistBanner || null,
+      fanart: adb?.strArtistFanart || null,
+      thumb: adb?.strArtistThumb || null,
+      logo: adb?.strArtistLogo || null,
+    },
     links: {
-      website: audioArtist?.strWebsite ? `https://${audioArtist.strWebsite.replace(/^https?:\/\//, '')}` : null,
-      lastfm: lastfmArtist?.url || null,
-      musicBrainz: mbArtist?.id ? `https://musicbrainz.org/artist/${mbArtist.id}` : null,
-      facebook: audioArtist?.strFacebook ? `https://${audioArtist.strFacebook.replace(/^https?:\/\//, '')}` : null,
-      twitter: audioArtist?.strTwitter ? `https://${audioArtist.strTwitter.replace(/^https?:\/\//, '')}` : null,
-      instagram: audioArtist?.strInstagram ? `https://${audioArtist.strInstagram.replace(/^https?:\/\//, '')}` : null,
+      website: withHttps(adb?.strWebsite),
+      wikipedia: wiki?.url || null,
+      lastfm: lfm?.url || null,
+      musicBrainz: mb?.id ? `https://musicbrainz.org/artist/${mb.id}` : null,
+      facebook: withHttps(adb?.strFacebook),
+      twitter: withHttps(adb?.strTwitter),
+      instagram: withHttps(adb?.strInstagram),
     },
     stats: {
-      listeners: Number(lastfmArtist?.stats?.listeners) || null,
-      playcount: Number(lastfmArtist?.stats?.playcount) || null,
+      listeners: Number(lfm?.stats?.listeners) || null,
+      playcount: Number(lfm?.stats?.playcount) || null,
     },
-    sourceIds: {
-      musicBrainz: mbArtist?.id || null,
-      audioDb: audioArtist?.idArtist || null,
-    },
+    sourceIds: { musicBrainz: mb?.id || null, audioDb: adb?.idArtist || null },
   }
 }
 
-const getAlbumInfo = async (albumName, artistName) => {
+const getAlbumInfo = async (albumName, artistName, { timeoutMs = 4500 } = {}) => {
   if (!albumName) return null
 
-  const [audioDbResult, musicBrainzResult] = await Promise.allSettled([
-    audioDb.get('/searchalbum.php', { params: { s: artistName || '', a: albumName } }),
-    musicBrainz.get('/release-group', {
-      params: {
-        query: artistName ? `releasegroup:"${albumName}" AND artist:"${artistName}"` : `releasegroup:"${albumName}"`,
-        fmt: 'json',
-        limit: 1,
-      },
-    }),
+  const [wiki, adb, mb] = await Promise.all([
+    settle(wikipedia.getAlbumSummary(albumName, artistName), timeoutMs),
+    settle(audiodb.album(albumName, artistName), timeoutMs),
+    settle(musicbrainz.albumGroup(albumName, artistName), timeoutMs),
   ])
 
-  const audioAlbum = audioDbResult.status === 'fulfilled' ? audioDbResult.value?.data?.album?.[0] : null
-  const mbAlbum = musicBrainzResult.status === 'fulfilled' ? musicBrainzResult.value?.data?.['release-groups']?.[0] : null
+  const wikiText = cleanText(wiki?.extract)
+  const adbText = cleanText(adb?.strDescriptionEN)
 
   return {
-    description: cleanText(audioAlbum?.strDescriptionEN || ''),
-    label: audioAlbum?.strLabel || null,
-    genre: audioAlbum?.strGenre || null,
-    style: audioAlbum?.strStyle || null,
-    mood: audioAlbum?.strMood || null,
-    musicBrainzId: mbAlbum?.id || null,
-    audioDbId: audioAlbum?.idAlbum || null,
+    description: wikiText || adbText,
+    descriptionSource: wikiText ? 'wikipedia' : adbText ? 'theaudiodb' : null,
+    label: adb?.strLabel || null,
+    genre: adb?.strGenre || null,
+    style: adb?.strStyle || null,
+    mood: adb?.strMood || null,
+    wikipediaUrl: wiki?.url || null,
+    musicBrainzId: mb?.id || null,
+    audioDbId: adb?.idAlbum || null,
   }
-}
-
-const getSimilarTracks = async (artist, track, limit = 12) => {
-  const data = await getLastfm('track.getsimilar', { artist, track, limit })
-  return (data?.similartracks?.track || []).map((item) => ({
-    name: item.name,
-    artist: item.artist?.name || artist,
-    match: Number(item.match) || null,
-    url: item.url || null,
-  }))
-}
-
-const getSimilarArtists = async (artist, limit = 12) => {
-  const data = await getLastfm('artist.getsimilar', { artist, limit })
-  return (data?.similarartists?.artist || []).map((item) => ({
-    name: item.name,
-    match: Number(item.match) || null,
-    url: item.url || null,
-    image: item.image || [],
-  }))
-}
-
-const getTagTracks = async (tag, limit = 20) => {
-  const data = await getLastfm('tag.gettoptracks', { tag, limit })
-  return (data?.tracks?.track || []).map((item) => ({
-    name: item.name,
-    artist: item.artist?.name || '',
-    url: item.url || null,
-    image: item.image || [],
-  }))
 }
 
 const searchMusicVideos = async (query, limit = 12) => {
   const { data } = await itunes.get('/search', {
-    params: {
-      term: query,
-      media: 'musicVideo',
-      entity: 'musicVideo',
-      limit,
-    },
+    params: { term: query, media: 'musicVideo', entity: 'musicVideo', limit },
   })
 
   return (data?.results || []).map((item) => ({
@@ -176,11 +123,4 @@ const searchMusicVideos = async (query, limit = 12) => {
   }))
 }
 
-module.exports = {
-  getArtistBio,
-  getAlbumInfo,
-  getSimilarTracks,
-  getSimilarArtists,
-  getTagTracks,
-  searchMusicVideos,
-}
+module.exports = { getArtistBio, getAlbumInfo, searchMusicVideos }
