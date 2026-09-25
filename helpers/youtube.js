@@ -5,17 +5,18 @@ const PROVIDERS = [
   {
     name: 'PrinceTech',
     url: process.env.PRINCE_API || 'https://api.princetechn.com/api/download/ytmp3',
-    params: (videoUrl) => ({ apikey: process.env.PRINCE_KEY || 'prince', url: videoUrl }),
+    params: (videoUrl) => ({ apikey: process.env.PRINCE_KEY, url: videoUrl }),
   },
   {
     name: 'GiftedTech',
     url: 'https://api.gifted.co.ke/api/download/ytaudio',
-    params: (videoUrl) => ({ apikey: process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x', url: videoUrl }),
+    params: (videoUrl) => ({ apikey: process.env.GIFTED_KEY, url: videoUrl }),
   },
   {
     name: 'DavidCyril',
     url: 'https://apis.davidcyril.name.ng/download/ytv3',
     params: (videoUrl) => ({ url: videoUrl }),
+    headers: () => (process.env.DCYRIL_API_KEY ? { 'X-API-Key': process.env.DCYRIL_API_KEY } : {}),
   },
 ]
 
@@ -43,6 +44,8 @@ const fetchFromProvider = async (provider, videoUrl, signal) => {
   try {
     const params = provider.params(videoUrl)
     const config = { params, timeout: 10000 }
+    const headers = provider.headers ? provider.headers() : null
+    if (headers && Object.keys(headers).length > 0) config.headers = headers
     if (signal) config.signal = signal
 
     const { data } = await axios.get(provider.url, config)

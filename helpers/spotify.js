@@ -19,8 +19,21 @@ const SEARCH_URL = SEARCH_URLS[0]
 
 const DOWNLOAD_PROVIDERS = [
   {
+    name: 'alyacore',
+    url: process.env.ALYACORE_URL || 'https://api.alyacore.xyz/dl/spotify',
+    params: (spotifyUrl) => ({ url: spotifyUrl, key: process.env.ALYACORE_KEY }),
+    isOk: (data) => data?.status === true,
+    extractUrl: (data) => data?.data?.dl || data?.dl,
+    extractMeta: (data) => ({
+      title: data?.data?.title,
+      artist: data?.data?.artist,
+      thumbnail: data?.data?.cover,
+    }),
+  },
+  {
     name: 'spotifydl',
     url: process.env.SPOTIFY_DL || 'https://apis.davidcyril.name.ng/spotifydl',
+    headers: process.env.DCYRIL_API_KEY ? { 'X-API-Key': process.env.DCYRIL_API_KEY } : undefined,
     extractUrl: (data) =>
       data?.DownloadLink ||
       data?.downloadLink ||
@@ -31,6 +44,7 @@ const DOWNLOAD_PROVIDERS = [
   {
     name: 'spotifydl2',
     url: process.env.SPOTIFY_DL2 || 'https://apis.davidcyril.name.ng/spotifydl2',
+    headers: process.env.DCYRIL_API_KEY ? { 'X-API-Key': process.env.DCYRIL_API_KEY } : undefined,
     extractUrl: (data) =>
       data?.result?.download ||
       data?.results?.downloadMP3 ||
@@ -140,7 +154,7 @@ const searchSpotifyCandidates = async (query) => {
   }
 
   // 2) Gifted API (fallback)
-  const apikey = process.env.GIFTED_KEY || 'gifted-api_p1r5icplshukpe2x'
+  const apikey = process.env.GIFTED_KEY
 
   let lastErr = null
   for (const baseUrl of [...new Set(SEARCH_URLS)]) {
@@ -299,15 +313,20 @@ const fetchDownloadFromProvider = async (provider, spotifyUrl, signal) => {
 
   try {
     const config = {
-      params: { url: spotifyUrl },
+      params: provider.params
+        ? provider.params(spotifyUrl)
+        : { url: spotifyUrl },
       timeout: 20000,
     }
+    if (provider.headers) config.headers = provider.headers
     if (signal) config.signal = signal
 
     const { data } = await axios.get(provider.url, config)
 
-    if (!data?.success) {
-      throw new Error(`${provider.name} returned unsuccessful response`)
+    const ok = provider.isOk ? provider.isOk(data) : data?.success
+    if (!ok) {
+      const apiMessage = data?.message || data?.error
+      throw new Error(apiMessage ? `${provider.name}: ${apiMessage}` : `${provider.name} returned unsuccessful response`)
     }
 
     const downloadUrl = provider.extractUrl(data)
@@ -317,11 +336,14 @@ const fetchDownloadFromProvider = async (provider, spotifyUrl, signal) => {
 
     console.info(`[spotify helper] provider ${provider.name} succeeded`)
 
+    const meta = provider.extractMeta ? provider.extractMeta(data) : {}
+
     return {
       url: downloadUrl,
-      title: data.title || data.result?.title || data.results?.title,
-      duration: data.duration || data.result?.duration || data.results?.duration,
-      thumbnail: data.thumbnail || data.result?.cover || data.result?.image || data.results?.image,
+      title: meta.title || data.title || data.result?.title || data.results?.title,
+      artist: meta.artist || data.artist || data.result?.artist || data.results?.artist,
+      duration: meta.duration || data.duration || data.result?.duration || data.results?.duration,
+      thumbnail: meta.thumbnail || data.thumbnail || data.result?.cover || data.result?.image || data.results?.image,
       format: data.result?.format || 'mp3',
       quality: '128kbps',
     }
@@ -329,7 +351,11 @@ const fetchDownloadFromProvider = async (provider, spotifyUrl, signal) => {
     if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
       console.warn(`[spotify helper] provider ${provider.name} aborted`)
     } else {
-      console.warn(`[spotify helper] provider ${provider.name} failed: ${error.message}`)
+      // Surface the API's own message (e.g. monthly quota / invalid key) instead of a bare status code
+      const apiMessage = error.response?.data?.message
+      const detail = apiMessage ? `${error.message} (${apiMessage})` : error.message
+      console.warn(`[spotify helper] provider ${provider.name} failed: ${detail}`)
+      if (apiMessage) error.message = detail
     }
     throw error
   }
