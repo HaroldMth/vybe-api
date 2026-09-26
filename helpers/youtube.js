@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { parseQuery, parseDurationToSec, pickBestTrack, UNWANTED_TITLE_RE } = require('./trackMatch')
+const { parseQuery, parseDurationToSec, pickBestTrack, isUnwantedTitle } = require('./trackMatch')
 
 const PROVIDERS = [
   {
@@ -115,11 +115,25 @@ const pickYoutubeVideo = async (query, hints = {}) => {
     best = pickBestTrack(candidates, expected, { minScore: 50 })
   }
 
-  // Last resort: first candidate that isn't a cover/remix, then absolute first
+  // Last resort: first candidate that isn't a cover/remix, then absolute first.
+  // Guard: the candidate must still be the expected song (artist + title signals),
+  // otherwise the "fallback" can return a different song entirely (Beat It -> Billie Jean bug).
   if (!isAcceptable(best)) {
-    console.warn('[youtube helper] scored match failed — using first acceptable candidate (emergency fallback)')
-    best = candidates.find(isAcceptable) || candidates[0]
+    const fallback = candidates.find((video) => {
+      if (!isAcceptable(video)) return false
+      const check = scoreTrack(video, expected)
+      return check.artistPoints >= 40 && check.titlePoints >= 40
+    })
+    if (fallback) {
+      console.info(`[youtube helper] scored match failed — using weak-signal fallback "${fallback.title}"`)
+      best = fallback
+    } else {
+      console.warn('[youtube helper] no candidate matches the expected song; failing instead of guessing')
+      best = null
+    }
   }
+
+  if (!best) throw new Error(`No acceptable YouTube match for "${expected.title || query}" by ${expected.artist || 'unknown artist'}`)
 
   console.info(`[youtube helper] picked "${best.title}" (${best.duration})`)
 

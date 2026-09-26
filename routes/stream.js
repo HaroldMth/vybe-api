@@ -9,6 +9,106 @@ const AUDIO_CACHE_DIR = path.join(__dirname, '..', '.cache', 'audio')
 const resolvedStreamCache = new Map()
 const pendingDownloads = new Map()
 
+// Some download hosts throttle each connection to ~10-35 KB/s but allow many
+// parallel HTTP range requests. Downloading the file in parallel slices is
+// then several times faster than one plain streaming request.
+const PARALLEL_RANGE_THRESHOLD = 1.5 * 1024 * 1024 // only bother above 1.5 MB
+const PARALLEL_SLICE_COUNT = 8
+const PARALLEL_SLICE_TIMEOUT = 60000
+
+const downloadParallelRanges = async (url, contentLength) => {
+  const sliceSize = Math.ceil(contentLength / PARALLEL_SLICE_COUNT)
+  const ranges = []
+  for (let i = 0; i < PARALLEL_SLICE_COUNT; i++) {
+    const start = i * sliceSize
+    const end = Math.min(start + sliceSize - 1, contentLength - 1)
+    if (start > end) break
+    ranges.push({ index: i, start, end })
+  }
+
+  const buffers = await Promise.all(
+    ranges.map(({ start, end }) =>
+      axios
+        .get(url, {
+          responseType: 'arraybuffer',
+          timeout: PARALLEL_SLICE_TIMEOUT,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+            Range: `bytes=${start}-${end}`,
+          },
+        })
+        .then((response) => Buffer.from(response.data))
+    )
+  )
+
+  const expected = ranges[ranges.length - 1].end + 1
+  return Buffer.concat(buffers, expected)
+}
+
+const downloadToCache = async (query, url, meta = {}) => {
+  const cacheKey = getCacheKey(query, meta)
+  const pending = pendingDownloads.get(cacheKey)
+  if (pending) return pending
+
+  const download = (async () => {
+    await ensureAudioCacheDir()
+    const filePath = getCachePath(query, url, meta)
+    const existing = await getCachedFileInfo(filePath)
+    if (existing) return filePath
+
+    const tempPath = `${filePath}.tmp-${Date.now()}`
+    let audioStream
+
+    // Probe the file size; large files come down via parallel range requests.
+    let contentLength = 0
+    try {
+      const head = await axios.head(url, {
+        timeout: 10000,
+        headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' },
+      })
+      contentLength = Number(head.headers['content-length']) || 0
+    } catch {
+      contentLength = 0
+    }
+
+    if (contentLength >= PARALLEL_RANGE_THRESHOLD) {
+      try {
+        const buffer = await downloadParallelRanges(url, contentLength)
+        await fs.promises.writeFile(tempPath, buffer)
+        await fs.promises.rename(tempPath, filePath)
+        return filePath
+      } catch (error) {
+        console.warn(`[stream route] parallel range download failed (${error.message}); falling back to streaming`)
+        await fs.promises.unlink(tempPath).catch(() => {})
+      }
+    }
+
+    const response = await axios.get(url, {
+      responseType: 'stream',
+      timeout: 30000,
+      headers: {
+        'User-Agent': 'VYBE/1.0',
+      },
+    })
+
+    await new Promise((resolve, reject) => {
+      const writer = fs.createWriteStream(tempPath)
+      response.data.pipe(writer)
+      writer.on('finish', resolve)
+      writer.on('error', reject)
+      response.data.on('error', reject)
+    })
+
+    await fs.promises.rename(tempPath, filePath)
+    return filePath
+  })().finally(() => {
+    pendingDownloads.delete(cacheKey)
+  })
+
+  pendingDownloads.set(cacheKey, download)
+  return download
+}
+
 const ensureAudioCacheDir = async () => {
   await fs.promises.mkdir(AUDIO_CACHE_DIR, { recursive: true })
 }
@@ -73,44 +173,6 @@ const getContentType = (filePath) => {
     '.webm': 'audio/webm',
   }
   return types[ext] || 'audio/mpeg'
-}
-
-const downloadToCache = async (query, url, meta = {}) => {
-  const cacheKey = getCacheKey(query, meta)
-  const pending = pendingDownloads.get(cacheKey)
-  if (pending) return pending
-
-  const download = (async () => {
-    await ensureAudioCacheDir()
-    const filePath = getCachePath(query, url, meta)
-    const existing = await getCachedFileInfo(filePath)
-    if (existing) return filePath
-
-    const tempPath = `${filePath}.tmp-${Date.now()}`
-    const response = await axios.get(url, {
-      responseType: 'stream',
-      timeout: 30000,
-      headers: {
-        'User-Agent': 'VYBE/1.0',
-      },
-    })
-
-    await new Promise((resolve, reject) => {
-      const writer = fs.createWriteStream(tempPath)
-      response.data.pipe(writer)
-      writer.on('finish', resolve)
-      writer.on('error', reject)
-      response.data.on('error', reject)
-    })
-
-    await fs.promises.rename(tempPath, filePath)
-    return filePath
-  })().finally(() => {
-    pendingDownloads.delete(cacheKey)
-  })
-
-  pendingDownloads.set(cacheKey, download)
-  return download
 }
 
 const sendCachedAudio = (req, res, filePath, stat) => {

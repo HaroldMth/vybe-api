@@ -5,6 +5,24 @@ const UNWANTED_TITLE_RE =
 // Used to penalise unofficial / cover uploads that don't match the expected artist at all
 const OTHER_ARTIST_SEPARATOR_RE = /\s+-\s+/
 
+// Words that mark a candidate as an unofficial/junk upload (covers, sped-up,
+// lyric videos, type-beat spam...). The words themselves are sometimes part of
+// real song titles ("Beat It", "Dance Monkey", "Live and Let Die"), so
+// isUnwantedTitle() checks them against the expected title before acting on a match.
+const isUnwantedTitle = (title, expectedTitle = '') => {
+  if (!title || !UNWANTED_TITLE_RE.test(title)) return false
+  const expected = normalize(expectedTitle)
+  if (!expected) return true
+  // Mask the song's own title (punctuation-tolerant, all occurrences) before testing,
+  // so words that are part of the real title ("beat" in "Beat It") are never treated
+  // as spam — but extra spam words outside it ("Beat It - Type Beat") still are.
+  const maskPattern = new RegExp(expected.split(' ').map(escapeRegExp).join('[^\\w]+'), 'gi')
+  const withoutTitle = String(title).replace(maskPattern, ' ')
+  return UNWANTED_TITLE_RE.test(withoutTitle)
+}
+
+const escapeRegExp = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 const normalize = (value = '') =>
   String(value)
     .toLowerCase()
@@ -86,7 +104,7 @@ const scoreTitle = (resultTitle, expectedTitle) => {
   if (!result) return 0
   if (result === expected) return 120
 
-  if (UNWANTED_TITLE_RE.test(resultTitle)) return 5
+  if (isUnwantedTitle(resultTitle, expectedTitle)) return 5
 
   // Handle "Artist - Title" or "Title - Artist" YouTube formats:
   // check every dash-separated segment for an exact match
@@ -99,7 +117,7 @@ const scoreTitle = (resultTitle, expectedTitle) => {
   if (result.includes(expected)) {
     const idx = result.indexOf(expected)
     const suffix = result.slice(idx + expected.length).trim()
-    if (UNWANTED_TITLE_RE.test(suffix)) return 8
+    if (isUnwantedTitle(suffix, expectedTitle)) return 8
     // favour results where the title is a clean standalone segment
     const prefix = result.slice(0, idx).trim()
     const segmentBoundary = prefix.endsWith('-') || prefix === '' || suffix.startsWith('(')
@@ -109,7 +127,7 @@ const scoreTitle = (resultTitle, expectedTitle) => {
   // Starts with the expected title
   if (result.startsWith(`${expected} `)) {
     const suffix = result.slice(expected.length).trim()
-    if (UNWANTED_TITLE_RE.test(suffix)) return 8
+    if (isUnwantedTitle(suffix, expectedTitle)) return 8
     return 55
   }
 
@@ -158,7 +176,7 @@ const scoreTrack = (candidate, expected = {}) => {
   const titlePoints = scoreTitle(title, expectedTitle)
   const artistPoints = scoreArtist(artist, expectedArtist)
   const durationPoints = scoreDuration(candidate.duration, expectedDurationSec)
-  const unwantedPenalty = UNWANTED_TITLE_RE.test(title) ? -80 : 0
+  const unwantedPenalty = isUnwantedTitle(title, expectedTitle) ? -80 : 0
 
   // Extra penalty: if the video title contains " - OtherName" and OtherName doesn't overlap
   // with the expected artist, it's almost certainly a cover/unofficial upload.
@@ -220,5 +238,6 @@ module.exports = {
   parseDurationToSec,
   scoreTrack,
   pickBestTrack,
+  isUnwantedTitle,
   UNWANTED_TITLE_RE,
 }

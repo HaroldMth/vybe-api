@@ -1,6 +1,6 @@
 const axios = require('axios')
 const { get } = require('./deezer')
-const { parseQuery, parseDurationToSec, pickBestTrack, scoreTrack, UNWANTED_TITLE_RE } = require('./trackMatch')
+const { parseQuery, parseDurationToSec, pickBestTrack, scoreTrack, isUnwantedTitle } = require('./trackMatch')
 const { resolveSpotifyViaMusicBrainz } = require('./spotifyResolve')
 const searchtify = require('./searchtify')
 const { stripDecor } = require('./text')
@@ -9,6 +9,10 @@ const { stripDecor } = require('./text')
 const CONFIDENT_SCORE = 250
 
 const SPOTIFY_TRACK_RE = /open\.spotify\.com\/track\/([a-zA-Z0-9]+)/
+
+// Some provider file hosts (e.g. api.lempi.lat) ignore requests with default
+// axios/curl User-Agents, so every provider call identifies as a browser.
+const BROWSER_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
 
 const SEARCH_URLS = [
   process.env.GIFTED_SPOTIFY_SEARCH,
@@ -28,6 +32,22 @@ const DOWNLOAD_PROVIDERS = [
       title: data?.data?.title,
       artist: data?.data?.artist,
       thumbnail: data?.data?.cover,
+    }),
+  },
+  {
+    // lempi answers fast but throttles file downloads per connection (~10-35 KB/s),
+    // so it's a fallback, not the primary.
+    name: 'lempi',
+    url: process.env.LEMPI_URL || 'https://api.lempi.lat/dl/spotify',
+    params: (spotifyUrl) => ({ url: spotifyUrl, apikey: process.env.LEMPI_API_KEY }),
+    headers: { 'User-Agent': BROWSER_UA },
+    isOk: (data) => data?.status === true,
+    extractUrl: (data) => data?.datos?.url || data?.data?.url,
+    extractMeta: (data) => ({
+      title: data?.titulo || data?.title,
+      artist: data?.artista || data?.artist,
+      thumbnail: data?.miniatura || data?.cover,
+      duration: data?.duracion,
     }),
   },
   {
@@ -53,24 +73,6 @@ const DOWNLOAD_PROVIDERS = [
       data?.DownloadLink,
   },
 ]
-
-const firstSuccessful = (promises) =>
-  new Promise((resolve, reject) => {
-    const errors = []
-    let remaining = promises.length
-
-    if (remaining === 0) return reject(new Error('No Spotify download providers configured'))
-
-    promises.forEach((promise) => {
-      promise.then(resolve).catch((error) => {
-        errors.push(error)
-        remaining -= 1
-        if (remaining === 0) {
-          reject(new Error(errors.map((e) => e.message).join('; ')))
-        }
-      })
-    })
-  })
 
 const extractSpotifyTrackUrl = (input) => {
   const match = String(input).match(SPOTIFY_TRACK_RE)
@@ -179,7 +181,7 @@ const searchSpotifyCandidates = async (query) => {
 
 const isAcceptableTrack = (track, expected) => {
   if (!track) return false
-  if (UNWANTED_TITLE_RE.test(track.title || '')) return false
+  if (isUnwantedTitle(track.title, expected?.title)) return false
   if (expected?.durationSec && track.durationSec) {
     const diff = Math.abs(track.durationSec - expected.durationSec)
     if (diff > 12) return false
@@ -318,7 +320,7 @@ const fetchDownloadFromProvider = async (provider, spotifyUrl, signal) => {
         : { url: spotifyUrl },
       timeout: 20000,
     }
-    if (provider.headers) config.headers = provider.headers
+    if (provider.headers) config.headers = { 'User-Agent': BROWSER_UA, ...provider.headers }
     if (signal) config.signal = signal
 
     const { data } = await axios.get(provider.url, config)
@@ -362,25 +364,20 @@ const fetchDownloadFromProvider = async (provider, spotifyUrl, signal) => {
 }
 
 const getSpotifyDownloadUrl = async (spotifyUrl) => {
-  const controllers = DOWNLOAD_PROVIDERS.map(() =>
-    typeof AbortController !== 'undefined' ? new AbortController() : null
-  )
-
-  const requests = DOWNLOAD_PROVIDERS.map((provider, index) =>
-    fetchDownloadFromProvider(
-      provider,
-      spotifyUrl,
-      controllers[index] ? controllers[index].signal : undefined
-    )
-  )
-
-  try {
-    const result = await firstSuccessful(requests)
-    controllers.forEach((controller) => controller && controller.abort())
-    return result
-  } catch (err) {
-    throw new Error(`Spotify download failed: ${err.message}`)
+  // Sequential, not a parallel race: a fast-but-throttled provider (lempi) answers
+  // quicker than the good primary (alyacore) and would otherwise "win" with a slow file.
+  const errors = []
+  for (const provider of DOWNLOAD_PROVIDERS) {
+    try {
+      return await fetchDownloadFromProvider(provider, spotifyUrl)
+    } catch (error) {
+      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+        throw error // caller aborted the whole request; stop immediately
+      }
+      errors.push(`${provider.name}: ${error.message}`)
+    }
   }
+  throw new Error(`No Spotify download provider succeeded (${errors.join('; ')})`)
 }
 
 const getSpotifyStreamUrl = async (query, hints = {}) => {
