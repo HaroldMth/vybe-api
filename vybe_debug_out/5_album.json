@@ -1,0 +1,450 @@
+{
+  "success": true,
+  "data": {
+    "id": "6812855",
+    "name": "The Very Best Of",
+    "recordType": "album",
+    "nbTracks": 10,
+    "releaseDate": "2013-09-10",
+    "explicit": true,
+    "image": [
+      {
+        "quality": "small",
+        "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+      },
+      {
+        "quality": "medium",
+        "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+      },
+      {
+        "quality": "large",
+        "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+      },
+      {
+        "quality": "xl",
+        "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+      }
+    ],
+    "artists": {
+      "primary": [
+        {
+          "id": "67927442",
+          "name": "Drake"
+        }
+      ]
+    },
+    "songs": [
+      {
+        "id": "69508597",
+        "name": "Ouch",
+        "duration": 275,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/0/8/b/0/08ba5ef120c548fc9bb2bb5a857fdb95.mp3?hdnea=exp=1790409545~acl=/api/1/1/0/8/b/0/08ba5ef120c548fc9bb2bb5a857fdb95.mp3*~data=user_id=0,application_id=42~hmac=af67ee03af089365eaf8dbe3232aebc53bcc4f7fb2dac1632d2370dc48d096bd",
+        "rank": 38827,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508598",
+        "name": "Nm2",
+        "duration": 286,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/0/5/8/0/058761a77a98c9b6a4de0c779cf51a18.mp3?hdnea=exp=1790409545~acl=/api/1/1/0/5/8/0/058761a77a98c9b6a4de0c779cf51a18.mp3*~data=user_id=0,application_id=42~hmac=65cbb233a5df7dc5b0874068709f81f78ac1cb97ed5179a25182093870c385f5",
+        "rank": 110929,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508599",
+        "name": "Dead Perspective",
+        "duration": 308,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/a/a/0/0/aa03d616f110d3846244acf233b8cb04.mp3?hdnea=exp=1790409545~acl=/api/1/1/a/a/0/0/aa03d616f110d3846244acf233b8cb04.mp3*~data=user_id=0,application_id=42~hmac=8ab4d8f055966c85454fb9217b8387bf8ab2d50ecc36433c8fe8fd11ccfa7f3f",
+        "rank": 54009,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508600",
+        "name": "Exercise 21-1-C4",
+        "duration": 284,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/c/d/d/0/cdd2d5b0a9c11452873c0018b2f1c0c2.mp3?hdnea=exp=1790409545~acl=/api/1/1/c/d/d/0/cdd2d5b0a9c11452873c0018b2f1c0c2.mp3*~data=user_id=0,application_id=42~hmac=54909443378436d542764effcd523621a5f431f59288a2eae4deda99707dea33",
+        "rank": 52910,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508601",
+        "name": "Crisis",
+        "duration": 228,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/2/0/c/0/20c5a0ab1f453e052da5b921d37295eb.mp3?hdnea=exp=1790409545~acl=/api/1/1/2/0/c/0/20c5a0ab1f453e052da5b921d37295eb.mp3*~data=user_id=0,application_id=42~hmac=42ebca4d6d12f5de0d42be8ea985e9d5d30e8fef4afe458cbcf3751452230df3",
+        "rank": 65375,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508602",
+        "name": "Devil's Comeback",
+        "duration": 281,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/f/5/d/0/f5d3456d804e638a59fdab8b11aa7c6c.mp3?hdnea=exp=1790409545~acl=/api/1/1/f/5/d/0/f5d3456d804e638a59fdab8b11aa7c6c.mp3*~data=user_id=0,application_id=42~hmac=ba5295e6732214e53aca2640af0419138bd72e92e3a23483d60384bfbb488c8c",
+        "rank": 9011,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508603",
+        "name": "Late Night Drinker",
+        "duration": 163,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/8/3/1/0/8319fe80d531af40c22446b5aa1510d2.mp3?hdnea=exp=1790409545~acl=/api/1/1/8/3/1/0/8319fe80d531af40c22446b5aa1510d2.mp3*~data=user_id=0,application_id=42~hmac=add4836eeb72ee3ebab32d98321e741f74c6353678d6c5daba1e02cabff94f37",
+        "rank": 425,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508604",
+        "name": "Mad Depressed",
+        "duration": 210,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/0/d/6/0/0d6eb3d71355ad7439deb4cddb3b8e66.mp3?hdnea=exp=1790409545~acl=/api/1/1/0/d/6/0/0d6eb3d71355ad7439deb4cddb3b8e66.mp3*~data=user_id=0,application_id=42~hmac=8bc220afab6bc9848cdc491ca9287c169167a4391d06b17911714abbd626923b",
+        "rank": 25869,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508605",
+        "name": "Home of Everything",
+        "duration": 92,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/9/0/f/0/90fe6630a07dd75fda5672214045b47a.mp3?hdnea=exp=1790409545~acl=/api/1/1/9/0/f/0/90fe6630a07dd75fda5672214045b47a.mp3*~data=user_id=0,application_id=42~hmac=52dd1b745640524f57d57dae5c53a9d751a435b3b8627e3408abd1e618ca7a17",
+        "rank": 22360,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      },
+      {
+        "id": "69508606",
+        "name": "Concrete Remixed",
+        "duration": 318,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/9/c/f/0/9cfca2084691f8d74750ccf57c007261.mp3?hdnea=exp=1790409545~acl=/api/1/1/9/c/f/0/9cfca2084691f8d74750ccf57c007261.mp3*~data=user_id=0,application_id=42~hmac=e88a63feea0c5f1aad50606b8411fd1b67c7c167f72b0b1b3ea3b20bce4917f5",
+        "rank": 25895,
+        "artists": {
+          "primary": [
+            {
+              "id": "67927442",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b4d1822ba7fa4b1ea7ca4a6d5dd507c2/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6812855",
+          "name": "The Very Best Of"
+        }
+      }
+    ],
+    "totalDuration": 2445,
+    "fans": 7485,
+    "upc": "888002953834",
+    "genres": [
+      "Electro",
+      "Chill Out/Trip-Hop/Lounge"
+    ],
+    "description": "",
+    "descriptionSource": null,
+    "label": "Dope Lotus Records",
+    "genre": "Electro",
+    "style": null,
+    "mood": null,
+    "links": {
+      "wikipedia": null,
+      "deezer": "https://www.deezer.com/album/6812855"
+    },
+    "sourceIds": {
+      "musicBrainz": null,
+      "audioDb": null
+    }
+  }
+}

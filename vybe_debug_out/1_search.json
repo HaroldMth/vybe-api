@@ -1,0 +1,1113 @@
+{
+  "success": true,
+  "data": {
+    "top": {
+      "type": "artist",
+      "item": {
+        "id": "67927442",
+        "name": "Drake",
+        "nbAlbum": 6,
+        "nbFan": 161,
+        "radio": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      }
+    },
+    "songs": [
+      {
+        "id": "124603270",
+        "name": "One Dance",
+        "duration": 174,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/7/a/b/0/7ab0602a95834e7862f7ef2ee5389d88.mp3?hdnea=exp=1790409541~acl=/api/1/1/7/a/b/0/7ab0602a95834e7862f7ef2ee5389d88.mp3*~data=user_id=0,application_id=42~hmac=a8e6a6a58b9e4b17c376f1ccdd64477d1d8100b1ebabec566cf42671325905a2",
+        "rank": 956192,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "13082992",
+          "name": "Views"
+        }
+      },
+      {
+        "id": "4022917771",
+        "name": "Janice STFU",
+        "duration": 237,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/7/3/2/0/7324c7d1edf2e198c43ec4f5c80670fc.mp3?hdnea=exp=1790409541~acl=/api/1/1/7/3/2/0/7324c7d1edf2e198c43ec4f5c80670fc.mp3*~data=user_id=0,application_id=42~hmac=889498f71bb4cd23dc6b5f9b026f6f26eafafc7efdf4ad4811322cbe6583075c",
+        "rank": 950305,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "983236081",
+          "name": "ICEMAN"
+        }
+      },
+      {
+        "id": "533609232",
+        "name": "God's Plan",
+        "duration": 198,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/9/5/c/0/95c243df757f8ccd17b6692e1051e2e9.mp3?hdnea=exp=1790409541~acl=/api/1/1/9/5/c/0/95c243df757f8ccd17b6692e1051e2e9.mp3*~data=user_id=0,application_id=42~hmac=1e84bcfb1709d96f1930043f0bcd51f20a1687883879216e2ec67f9a8761d6ca",
+        "rank": 937522,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "69319552",
+          "name": "Scorpion"
+        }
+      },
+      {
+        "id": "124603286",
+        "name": "Hotline Bling",
+        "duration": 267,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/a/c/1/0/ac1d5a7a9a829c0332a6de32a0f8a90b.mp3?hdnea=exp=1790409541~acl=/api/1/1/a/c/1/0/ac1d5a7a9a829c0332a6de32a0f8a90b.mp3*~data=user_id=0,application_id=42~hmac=13cdb1201718e0b6ffd3dd83e5571e2923e19df9f26e6d97362678c308cb90fa",
+        "rank": 897048,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "13082992",
+          "name": "Views"
+        }
+      },
+      {
+        "id": "608410332",
+        "name": "MIA",
+        "duration": 210,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/5/e/6/0/5e6a80f55aacc183618ed840d0c24f00.mp3?hdnea=exp=1790409541~acl=/api/1/1/5/e/6/0/5e6a80f55aacc183618ed840d0c24f00.mp3*~data=user_id=0,application_id=42~hmac=5b18a331b94462d28523a704f21d0ebcc82e4aca80eaa62962174a0bff121656",
+        "rank": 897079,
+        "artists": {
+          "primary": [
+            {
+              "id": "10583405",
+              "name": "Bad Bunny"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/72213221ed4529431857d42f6be61d56/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/72213221ed4529431857d42f6be61d56/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/72213221ed4529431857d42f6be61d56/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/72213221ed4529431857d42f6be61d56/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "82541262",
+          "name": "X 100PRE"
+        }
+      },
+      {
+        "id": "144572210",
+        "name": "Passionfruit",
+        "duration": 299,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/e/b/d/0/ebd770a4b7ecbfbc98bc19a96e39f048.mp3?hdnea=exp=1790409541~acl=/api/1/1/e/b/d/0/ebd770a4b7ecbfbc98bc19a96e39f048.mp3*~data=user_id=0,application_id=42~hmac=bca68bea9248ddd2a317f4d802e673160c7218665a6b6c0974f6cf553bc43871",
+        "rank": 873309,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "15685208",
+          "name": "More Life"
+        }
+      },
+      {
+        "id": "118190298",
+        "name": "Work",
+        "duration": 219,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/4/4/3/0/443e99645382dc24ad5f15cc4e115c19.mp3?hdnea=exp=1790409541~acl=/api/1/1/4/4/3/0/443e99645382dc24ad5f15cc4e115c19.mp3*~data=user_id=0,application_id=42~hmac=bdef3328902a5d8e981565aca37c3525092136807f05bb8a50195e8fa15cf4b1",
+        "rank": 848062,
+        "artists": {
+          "primary": [
+            {
+              "id": "564",
+              "name": "Rihanna"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/4fc5f387624c25de0ec96b4719e3a36d/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/4fc5f387624c25de0ec96b4719e3a36d/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/4fc5f387624c25de0ec96b4719e3a36d/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/4fc5f387624c25de0ec96b4719e3a36d/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "12279688",
+          "name": "ANTI (Deluxe)"
+        }
+      },
+      {
+        "id": "13529560",
+        "name": "What's My Name? (Album Version)",
+        "duration": 264,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/e/e/d/0/eed9b5164512b0a0df27e4043fb7f57c.mp3?hdnea=exp=1790409541~acl=/api/1/1/e/e/d/0/eed9b5164512b0a0df27e4043fb7f57c.mp3*~data=user_id=0,application_id=42~hmac=38112c6001eefb47d1e513a1166100c37e2aea839bdc79861129d63a92dc2e25",
+        "rank": 847815,
+        "artists": {
+          "primary": [
+            {
+              "id": "564",
+              "name": "Rihanna"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/3a12c64bb52a167944783878ffe41f02/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/3a12c64bb52a167944783878ffe41f02/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/3a12c64bb52a167944783878ffe41f02/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/3a12c64bb52a167944783878ffe41f02/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "1238967",
+          "name": "Loud"
+        }
+      },
+      {
+        "id": "1484144902",
+        "name": "Yebba’s Heartbreak",
+        "duration": 133,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/f/a/4/0/fa495d0e81bf7500a7260e1503a9a58e.mp3?hdnea=exp=1790409541~acl=/api/1/1/f/a/4/0/fa495d0e81bf7500a7260e1503a9a58e.mp3*~data=user_id=0,application_id=42~hmac=b534f73b4d0b7af2cf9be69930a9e250398fa9368b06f73b9fcd7b3eb6be3dd5",
+        "rank": 819289,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/ea8f80f2edb20885ac8aed8751716794/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/ea8f80f2edb20885ac8aed8751716794/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/ea8f80f2edb20885ac8aed8751716794/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/ea8f80f2edb20885ac8aed8751716794/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "256312232",
+          "name": "Certified Lover Boy"
+        }
+      },
+      {
+        "id": "70697364",
+        "name": "Hold On, We're Going Home (Album Version)",
+        "duration": 227,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/5/a/6/0/5a668eb11bba76dbada03606b7b3de91.mp3?hdnea=exp=1790409541~acl=/api/1/1/5/a/6/0/5a668eb11bba76dbada03606b7b3de91.mp3*~data=user_id=0,application_id=42~hmac=2452c283f151d4331efbfc2cc2fcbeb1d558df4d502f5e2c661cb39691ac142b",
+        "rank": 813576,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/64ec37a4cf512c7810c40ba0d318ff1e/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/64ec37a4cf512c7810c40ba0d318ff1e/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/64ec37a4cf512c7810c40ba0d318ff1e/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/64ec37a4cf512c7810c40ba0d318ff1e/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "6941024",
+          "name": "Nothing Was The Same (Deluxe)"
+        }
+      },
+      {
+        "id": "4022917821",
+        "name": "National Treasures",
+        "duration": 200,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/9/7/d/0/97d16a361784464e6e647b6afe1f61ec.mp3?hdnea=exp=1790409541~acl=/api/1/1/9/7/d/0/97d16a361784464e6e647b6afe1f61ec.mp3*~data=user_id=0,application_id=42~hmac=f33fd1fd75fb4d3d0e92d882f69afdc329a636f789e614c3f373844edef4505e",
+        "rank": 818381,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "983236081",
+          "name": "ICEMAN"
+        }
+      },
+      {
+        "id": "2486117711",
+        "name": "Rich Baby Daddy",
+        "duration": 319,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/c/7/f/0/c7f452be42181a050a57540cfd317f5e.mp3?hdnea=exp=1790409541~acl=/api/1/1/c/7/f/0/c7f452be42181a050a57540cfd317f5e.mp3*~data=user_id=0,application_id=42~hmac=eb9b9e6dee8fbd9715c6ae293c07a95fd1f48c31ef8c0b88208d9964a0422bc3",
+        "rank": 821624,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/868162e87da67d647789ed7b6456840c/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/868162e87da67d647789ed7b6456840c/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/868162e87da67d647789ed7b6456840c/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/868162e87da67d647789ed7b6456840c/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "496789121",
+          "name": "For All The Dogs"
+        }
+      },
+      {
+        "id": "17347964",
+        "name": "Headlines (Explicit Version)",
+        "duration": 236,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/e/2/0/0/e20ff1b84ea32883a21366e4d3116b9d.mp3?hdnea=exp=1790409541~acl=/api/1/1/e/2/0/0/e20ff1b84ea32883a21366e4d3116b9d.mp3*~data=user_id=0,application_id=42~hmac=6e89d73e693937f18d48e92fc8ea293d4019ef8bac87a45807ea827093e715b8",
+        "rank": 827258,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "1622724",
+          "name": "Take Care (Deluxe)"
+        }
+      },
+      {
+        "id": "533609402",
+        "name": "Don’t Matter To Me",
+        "duration": 246,
+        "explicit": false,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/7/7/f/0/77f1289a7afded248f1b1deafbd97e80.mp3?hdnea=exp=1790409541~acl=/api/1/1/7/7/f/0/77f1289a7afded248f1b1deafbd97e80.mp3*~data=user_id=0,application_id=42~hmac=1d6e449d1f3bf620a53c4fcb20b13cbc641b79402ca1671411d4caa62f068a16",
+        "rank": 794139,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "69319552",
+          "name": "Scorpion"
+        }
+      },
+      {
+        "id": "3232025631",
+        "name": "NOKIA",
+        "duration": 241,
+        "explicit": true,
+        "chartPosition": null,
+        "previewUrl": "https://cdnt-preview.dzcdn.net/api/1/1/7/2/4/0/7247d308a563fc4b59d9d35b4387e098.mp3?hdnea=exp=1790409541~acl=/api/1/1/7/2/4/0/7247d308a563fc4b59d9d35b4387e098.mp3*~data=user_id=0,application_id=42~hmac=def2c2896aa502d8c20657aa4835f04b3db38858a6cc2ca369b8c18e9ddc4479",
+        "rank": 815962,
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        },
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/478562cdbafe4faa1515bd457042cc4a/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/478562cdbafe4faa1515bd457042cc4a/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/478562cdbafe4faa1515bd457042cc4a/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/478562cdbafe4faa1515bd457042cc4a/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "album": {
+          "id": "712442261",
+          "name": "$ome $exy $ongs 4 U"
+        }
+      }
+    ],
+    "artists": [
+      {
+        "id": "67927442",
+        "name": "Drake",
+        "nbAlbum": 6,
+        "nbFan": 161,
+        "radio": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/artist/70223888f501f4b843142e071abda364/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "246791",
+        "name": "Drake",
+        "nbAlbum": 90,
+        "nbFan": 24091063,
+        "radio": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/artist/eb0ed5b21d1ea5af021fc074ded0e91f/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/artist/eb0ed5b21d1ea5af021fc074ded0e91f/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/artist/eb0ed5b21d1ea5af021fc074ded0e91f/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/artist/eb0ed5b21d1ea5af021fc074ded0e91f/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "67926762",
+        "name": "Drake",
+        "nbAlbum": 7,
+        "nbFan": 115,
+        "radio": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/artist/1051e7fd110f9d3e5e88cdc69c5f227b/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/artist/1051e7fd110f9d3e5e88cdc69c5f227b/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/artist/1051e7fd110f9d3e5e88cdc69c5f227b/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/artist/1051e7fd110f9d3e5e88cdc69c5f227b/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "303396411",
+        "name": "Drake",
+        "nbAlbum": 2,
+        "nbFan": 9,
+        "radio": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/artist/2d61cfa7e8f4352e953e56aea1937879/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/artist/2d61cfa7e8f4352e953e56aea1937879/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/artist/2d61cfa7e8f4352e953e56aea1937879/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/artist/2d61cfa7e8f4352e953e56aea1937879/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "2062",
+        "name": "Nick Drake",
+        "nbAlbum": 12,
+        "nbFan": 102940,
+        "radio": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/artist/6e8750b76709a75f37d5556735c8f17a/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/artist/6e8750b76709a75f37d5556735c8f17a/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/artist/6e8750b76709a75f37d5556735c8f17a/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/artist/6e8750b76709a75f37d5556735c8f17a/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      }
+    ],
+    "albums": [
+      {
+        "id": "983236081",
+        "name": "ICEMAN",
+        "recordType": "album",
+        "nbTracks": 18,
+        "releaseDate": null,
+        "explicit": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/cccf5e9af10b6aae96f5cdd5a27c2aff/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        }
+      },
+      {
+        "id": "13082992",
+        "name": "Views",
+        "recordType": "album",
+        "nbTracks": 20,
+        "releaseDate": null,
+        "explicit": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/56bdb7a86a27fadb96332c0c8f1b8e81/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        }
+      },
+      {
+        "id": "69319552",
+        "name": "Scorpion",
+        "recordType": "album",
+        "nbTracks": 25,
+        "releaseDate": null,
+        "explicit": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/b69d3bcbd130ad4cc9259de543889e30/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        }
+      },
+      {
+        "id": "1622724",
+        "name": "Take Care (Deluxe)",
+        "recordType": "album",
+        "nbTracks": 19,
+        "releaseDate": null,
+        "explicit": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/6e7a6c8f36669dcd11abe7e7c3222e91/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        }
+      },
+      {
+        "id": "15685208",
+        "name": "More Life",
+        "recordType": "album",
+        "nbTracks": 22,
+        "releaseDate": null,
+        "explicit": true,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227/1000x1000-000000-80-0-0.jpg"
+          }
+        ],
+        "artists": {
+          "primary": [
+            {
+              "id": "246791",
+              "name": "Drake"
+            }
+          ]
+        }
+      }
+    ],
+    "playlists": [
+      {
+        "id": "4697063924",
+        "name": "100% Drake",
+        "description": "",
+        "nbTracks": 50,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/487768d841f2a94003c941727537b1df/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/487768d841f2a94003c941727537b1df/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/487768d841f2a94003c941727537b1df/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/487768d841f2a94003c941727537b1df/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "1699545511",
+        "name": "R&B Rewind",
+        "description": "",
+        "nbTracks": 50,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/f84df90a177b338f6184a12b9d62c6b6/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/f84df90a177b338f6184a12b9d62c6b6/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/f84df90a177b338f6184a12b9d62c6b6/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/f84df90a177b338f6184a12b9d62c6b6/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "10959936142",
+        "name": "100% Nick Drake",
+        "description": "",
+        "nbTracks": 25,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/12037771fc5bec0bd851e9fc33248c00/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/12037771fc5bec0bd851e9fc33248c00/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/12037771fc5bec0bd851e9fc33248c00/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/12037771fc5bec0bd851e9fc33248c00/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "826578623",
+        "name": "Best R&B Hits || The Weeknd, Drake, Rihanna, Jerem",
+        "description": "",
+        "nbTracks": 193,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/3007834c38af7d035b6d16a483ef8c46/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/3007834c38af7d035b6d16a483ef8c46/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/3007834c38af7d035b6d16a483ef8c46/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/3007834c38af7d035b6d16a483ef8c46/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "2506597284",
+        "name": "Rap US Hits 2026 🔥 🐐 | Rap US Bangers 2026 | Drake",
+        "description": "",
+        "nbTracks": 248,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/624f5cb7f213fdf3a0d1474117d041f7/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/624f5cb7f213fdf3a0d1474117d041f7/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/624f5cb7f213fdf3a0d1474117d041f7/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/624f5cb7f213fdf3a0d1474117d041f7/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "15781281901",
+        "name": "Work playlist",
+        "description": "",
+        "nbTracks": 53,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/84199e5196011d5d281614c1ff5a8c15/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/84199e5196011d5d281614c1ff5a8c15/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/84199e5196011d5d281614c1ff5a8c15/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/84199e5196011d5d281614c1ff5a8c15/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "15222637363",
+        "name": "R&B Late Night Vibes — Drake, SZA, Frank Ocean",
+        "description": "",
+        "nbTracks": 376,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227-4599d79a2bea5890737328996e2e7077-cc4f9cb36261380fe2d011d85bd441ac-6e7a6c8f36669dcd11abe7e7c3222e91/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227-4599d79a2bea5890737328996e2e7077-cc4f9cb36261380fe2d011d85bd441ac-6e7a6c8f36669dcd11abe7e7c3222e91/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227-4599d79a2bea5890737328996e2e7077-cc4f9cb36261380fe2d011d85bd441ac-6e7a6c8f36669dcd11abe7e7c3222e91/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/cover/8f0187ad83cdd1f47f1c55420f9df227-4599d79a2bea5890737328996e2e7077-cc4f9cb36261380fe2d011d85bd441ac-6e7a6c8f36669dcd11abe7e7c3222e91/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      },
+      {
+        "id": "15747144721",
+        "name": "💔",
+        "description": "",
+        "nbTracks": 34,
+        "image": [
+          {
+            "quality": "small",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/a175a403d11e10fe2f91b3030e90403c/56x56-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "medium",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/a175a403d11e10fe2f91b3030e90403c/250x250-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "large",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/a175a403d11e10fe2f91b3030e90403c/500x500-000000-80-0-0.jpg"
+          },
+          {
+            "quality": "xl",
+            "url": "https://cdn-images.dzcdn.net/images/playlist/a175a403d11e10fe2f91b3030e90403c/1000x1000-000000-80-0-0.jpg"
+          }
+        ]
+      }
+    ]
+  }
+}
