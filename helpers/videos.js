@@ -81,8 +81,9 @@ const detectYoutubeUrl = async (input, hints = {}, { search = defaultSearch } = 
 
   if (!strInput) {
     if (hints.title || hints.artist || hints.query) {
-      const video = await findOfficialVideo(hints, { search })
-      if (video?.watchUrl) return video.watchUrl
+      const q = `${hints.artist || ''} ${hints.title || hints.query || ''}`.trim()
+      const list = await searchVideos(q, { limit: 1, search }).catch(() => [])
+      if (list.length > 0 && list[0].watchUrl) return list[0].watchUrl
     }
     throw new Error('url, videoId, or q param required')
   }
@@ -98,14 +99,12 @@ const detectYoutubeUrl = async (input, hints = {}, { search = defaultSearch } = 
     return `https://www.youtube.com/watch?v=${strInput}`
   }
 
-  // 3. Search YouTube for official video or best candidate
-  const video = await findOfficialVideo({ query: strInput, ...hints }, { search }).catch(() => null)
-  if (video?.watchUrl) {
-    return video.watchUrl
-  }
+  // 3. Search YouTube directly via youtube-sr search package
+  const searchQuery = hints.artist && !strInput.toLowerCase().includes(hints.artist.toLowerCase())
+    ? `${hints.artist} ${strInput}`
+    : strInput
 
-  // 4. Fallback search
-  const list = await searchVideos(strInput, { limit: 1, search }).catch(() => [])
+  const list = await searchVideos(searchQuery, { limit: 5, search }).catch(() => [])
   if (list.length > 0 && list[0].watchUrl) {
     return list[0].watchUrl
   }
@@ -118,7 +117,7 @@ const fetchVideoFromDavidCyril = async (youtubeUrl) => {
   const headers = process.env.DCYRIL_API_KEY ? { 'X-API-Key': process.env.DCYRIL_API_KEY } : {}
   const { data } = await axios.get(DC_YTMP4_URL, {
     params: { url: youtubeUrl },
-    timeout: 25000,
+    timeout: 45000,
     headers,
   })
 

@@ -46,7 +46,7 @@ module.exports = app // for tests
 
 if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 4000
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`VYBE API running on port ${PORT}`)
     // Pre-build the home feed so the first visitor doesn't pay for a cold cache.
     require('./helpers/feed').warm()
