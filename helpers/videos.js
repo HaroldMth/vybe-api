@@ -14,6 +14,9 @@ const YT_ID_RE = /^[\w-]{11}$/
 const YT_URL_RE = /(?:https?:\/\/)?(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i
 
 const DC_YTMP4_URL = process.env.DCYRIL_YTMP4 || 'https://apis.davidcyril.name.ng/download/ytmp4'
+const OMEGATECH_URL = process.env.OMEGATECH_URL || 'https://api.omegatech.app/api/download/yt-dl'
+// 360p = itag 18, the only muxed (video+audio) MP4 these APIs return; higher itags are video-only DASH and play silent.
+const VIDEO_STREAM_QUALITY = '360p'
 
 const defaultSearch = async (searchQuery, limit = 10) => {
   try {
@@ -222,6 +225,40 @@ const fetchVideoFromSaveTubeAndHector = async (youtubeUrl) => {
   }
 }
 
+// Resolve video stream via Omegatech (primary provider: ~2s resolution, googlevideo MP4 proxies fine with Range support)
+const fetchVideoFromOmegatech = async (youtubeUrl) => {
+  const videoId = extractVideoId(youtubeUrl)
+  const { data } = await axios.get(OMEGATECH_URL, {
+    params: { action: 'download', url: youtubeUrl, quality: VIDEO_STREAM_QUALITY },
+    timeout: 12000,
+  })
+
+  const info = data?.data
+  const downloadUrl =
+    info?.downloadUrl ||
+    info?.allMedias?.find((m) => String(m.quality || '').toLowerCase().includes('360'))?.url
+
+  if (data?.success === false || !downloadUrl) {
+    throw new Error(data?.error || data?.message || 'Omegatech returned no downloadUrl')
+  }
+
+  return {
+    url: downloadUrl,
+    download_url: downloadUrl,
+    streamUrl: downloadUrl,
+    title: info.title || '',
+    thumbnail: info.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    quality: VIDEO_STREAM_QUALITY,
+    format: 'mp4',
+    type: 'video',
+    creator: 'Omegatech',
+    source: 'omegatech',
+    youtubeUrl,
+    videoId,
+    durationSec: Number.isFinite(info.durationSeconds) ? info.durationSeconds : undefined,
+  }
+}
+
 // Fetch MP4 video download URL with multi-provider strategy
 const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false } = {}) => {
   const videoId = extractVideoId(youtubeUrl)
@@ -235,7 +272,21 @@ const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false } = {}) => {
     upstreamCache.delete(videoId)
   }
 
-  // 1. Try SaveTube + Hector Worker first (fast & reliable)
+  // 1. Omegatech (primary: fast, streams directly through the proxy)
+  try {
+    const result = await fetchVideoFromOmegatech(youtubeUrl)
+    if (videoId) {
+      upstreamCache.set(videoId, {
+        data: result,
+        expiresAt: now + UPSTREAM_CACHE_TTL_MS,
+      })
+    }
+    return result
+  } catch (err) {
+    console.warn(`[Video] Omegatech resolution failed for "${youtubeUrl}": ${err.message}. Trying SaveTube/Hector...`)
+  }
+
+  // 2. SaveTube + Hector Worker
   try {
     const result = await fetchVideoFromSaveTubeAndHector(youtubeUrl)
     if (videoId) {
@@ -249,7 +300,7 @@ const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false } = {}) => {
     console.warn(`[Video] SaveTube/Hector resolution failed for "${youtubeUrl}": ${err.message}. Trying David Cyril...`)
   }
 
-  // 2. Fallback to David Cyril
+  // 3. Fallback to David Cyril
   const dcResult = await fetchVideoFromDavidCyril(youtubeUrl, { forceRefresh })
   const finalResult = {
     ...dcResult,
