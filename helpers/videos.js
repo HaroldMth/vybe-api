@@ -10,9 +10,39 @@ const YT_URL_RE = /(?:https?:\/\/)?(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:wat
 
 const DC_YTMP4_URL = process.env.DCYRIL_YTMP4 || 'https://apis.davidcyril.name.ng/download/ytmp4'
 
-const defaultSearch = (searchQuery, limit) => {
-  const YouTube = require('youtube-sr').default
-  return YouTube.search(searchQuery, { limit, type: 'video' })
+const defaultSearch = async (searchQuery, limit = 10) => {
+  try {
+    const { data: html } = await axios.get('https://www.youtube.com/results', {
+      params: { search_query: searchQuery },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
+      timeout: 10000
+    })
+
+    const jsonMatch = html.match(/var ytInitialData = (\{.*?\});<\/script>/s)
+    if (!jsonMatch) return []
+    const data = JSON.parse(jsonMatch[1])
+    const contents = data?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || []
+
+    return contents
+      .filter(c => c.videoRenderer && c.videoRenderer.videoId)
+      .slice(0, limit)
+      .map(c => {
+        const v = c.videoRenderer
+        return {
+          id: v.videoId,
+          title: v.title?.runs?.[0]?.text || '',
+          channel: { name: v.ownerText?.runs?.[0]?.text || '' },
+          durationFormatted: v.lengthText?.simpleText || '',
+          thumbnail: { url: v.thumbnail?.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg` }
+        }
+      })
+  } catch (err) {
+    console.error('YouTube search scraper error:', err.message)
+    return []
+  }
 }
 
 const toVideo = (item) => ({
