@@ -62,6 +62,8 @@ const handleVideoStream = async (req, res) => {
   const title = str(req.query.title)
   const artist = str(req.query.artist)
 
+  console.log(`[VideoApi] GET /stream request: input="${input}" title="${title}" artist="${artist}"`)
+
   if (!input && !title) {
     return res.status(400).json({ success: false, message: 'url, q, v, id, or title param required' })
   }
@@ -87,8 +89,10 @@ const handleVideoStream = async (req, res) => {
     )
 
     const streamData = await Promise.race([streamPromise, timeoutPromise])
+    console.log(`[VideoApi] Stream resolved successfully for "${input}": url=${streamData.url}`)
     res.json({ success: true, data: streamData })
   } catch (err) {
+    console.error(`[VideoApi] Stream resolution failed for "${input}": ${err.message}`)
     fail(res, err)
   }
 }
@@ -99,9 +103,11 @@ router.get('/download', handleVideoStream)
 // Proxy video stream: GET /api/videos/play/:id
 router.get('/play/:id', async (req, res) => {
   const id = str(req.params.id)
+  const clientIp = req.ip || req.socket.remoteAddress
   if (!id) return res.status(400).json({ success: false, message: 'Video ID required' })
 
   if (activeProxyStreams >= MAX_CONCURRENT_PROXIES) {
+    console.warn(`[VideoProxy] 503 Busy: max concurrency (${MAX_CONCURRENT_PROXIES}) reached for client ${clientIp}`)
     return res.status(503).json({ success: false, message: 'Server busy: max video stream concurrency reached' })
   }
 
@@ -109,26 +115,31 @@ router.get('/play/:id', async (req, res) => {
   let isClosed = false
   const clientRange = req.headers.range
 
-  console.log(`[VideoProxy] Request for id="${id}" | Range="${clientRange || 'none'}" | Active=${activeProxyStreams}`)
+  console.log(`[VideoProxy] ▶ START id="${id}" | Range="${clientRange || 'none'}" | Client=${clientIp} | Active=${activeProxyStreams}`)
 
-  const cleanup = () => {
+  const cleanup = (reason) => {
     if (!isClosed) {
       isClosed = true
       activeProxyStreams = Math.max(0, activeProxyStreams - 1)
+      console.log(`[VideoProxy] ■ END id="${id}" (${reason}) | Active=${activeProxyStreams}`)
     }
   }
 
-  req.on('close', cleanup)
-  res.on('finish', cleanup)
+  req.on('close', () => cleanup('req close'))
+  res.on('finish', () => cleanup('res finish'))
 
   let cancelSource = axios.CancelToken.source()
 
   req.on('aborted', () => {
+    console.log(`[VideoProxy] Client aborted request for id="${id}"`)
     cancelSource.cancel('Client aborted request')
   })
 
   try {
+    const t0 = Date.now()
+    console.log(`[VideoProxy] Resolving upstream URL for id="${id}"...`)
     let upstreamUrl = await getVideoUpstreamUrl(id)
+    console.log(`[VideoProxy] Upstream URL resolved in ${(Date.now() - t0)}ms -> ${upstreamUrl}`)
 
     const fetchUpstream = async (url) => {
       const headers = {
@@ -139,6 +150,7 @@ router.get('/play/:id', async (req, res) => {
         headers['Range'] = clientRange
       }
 
+      console.log(`[VideoProxy] Connecting upstream -> ${url.substring(0, 90)}... (Range: ${clientRange || 'none'})`)
       return axios({
         method: 'get',
         url,
@@ -153,11 +165,14 @@ router.get('/play/:id', async (req, res) => {
     let upstreamRes
     try {
       upstreamRes = await fetchUpstream(upstreamUrl)
+      console.log(`[VideoProxy] Upstream connected! Status=${upstreamRes.status} Content-Type=${upstreamRes.headers['content-type']} Content-Length=${upstreamRes.headers['content-length']}`)
     } catch (err) {
       const status = err.response?.status
+      console.warn(`[VideoProxy] Upstream fetch failed for "${id}": status=${status || 'none'} err=${err.message}`)
       if (status === 403 || status === 410) {
         console.log(`[VideoProxy] Upstream returned ${status} for "${id}". Retrying once with fresh link...`)
         upstreamUrl = await getVideoUpstreamUrl(id, { forceRefresh: true })
+        console.log(`[VideoProxy] Fresh upstream URL -> ${upstreamUrl}`)
         cancelSource = axios.CancelToken.source()
         req.on('close', () => cancelSource.cancel('Client disconnected'))
         upstreamRes = await fetchUpstream(upstreamUrl)
@@ -178,11 +193,12 @@ router.get('/play/:id', async (req, res) => {
       res.setHeader('Content-Length', upstreamRes.headers['content-length'])
     }
 
+    console.log(`[VideoProxy] Piping stream to client for id="${id}" (HTTP ${upstreamRes.status})...`)
     upstreamRes.data.pipe(res)
   } catch (err) {
-    cleanup()
+    cleanup('error')
     if (!res.headersSent) {
-      console.error(`[VideoProxy] Failed for "${id}":`, err.message)
+      console.error(`[VideoProxy] ERROR for "${id}":`, err.message)
       res.status(502).json({ success: false, message: `Video proxy stream failed: ${err.message}` })
     }
   }
