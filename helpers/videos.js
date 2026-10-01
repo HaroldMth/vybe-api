@@ -142,12 +142,115 @@ const detectYoutubeUrl = async (input, hints = {}, { search = defaultSearch } = 
   throw new Error(`Could not detect a YouTube video for "${strInput}"`)
 }
 
-// Fetch MP4 video download URL from David Cyril API
-const fetchVideoFromDavidCyril = async (youtubeUrl) => {
+// Extract 11-character YouTube video ID
+const extractVideoId = (input) => {
+  const strInput = String(input || '').trim()
+  const match = strInput.match(YT_URL_RE)
+  if (match) return match[1]
+  if (YT_ID_RE.test(strInput)) return strInput
+  return null
+}
+
+// In-memory cache for resolved upstream video stream objects: videoId -> { data, expiresAt }
+const upstreamCache = new Map()
+const UPSTREAM_CACHE_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
+
+const SAVETUBE_KEY_HEX = 'C5D58EF67A7584E4A29F6C35BBC4EB12'
+const savetubeKeyBuf = Buffer.from(SAVETUBE_KEY_HEX, 'hex')
+
+const decryptSaveTube = (b64) => {
+  const buf = Buffer.from(b64, 'base64')
+  const iv = buf.subarray(0, 16)
+  const ct = buf.subarray(16)
+  const d = require('crypto').createDecipheriv('aes-128-cbc', savetubeKeyBuf, iv)
+  return JSON.parse(Buffer.concat([d.update(ct), d.final()]).toString('utf8'))
+}
+
+const SAVETUBE_HEADERS = {
+  'content-type': 'application/json',
+  'origin': 'https://save-tube.com',
+  'referer': 'https://save-tube.com/',
+  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+}
+
+// Resolve video stream via SaveTube / Hector Cloudflare Worker
+const fetchVideoFromSaveTubeAndHector = async (youtubeUrl) => {
+  const videoId = extractVideoId(youtubeUrl)
+  const { data: cdnData } = await axios.get('https://media.savetube.vip/api/random-cdn', {
+    headers: SAVETUBE_HEADERS,
+    timeout: 5000,
+  })
+
+  const { data: infoRes } = await axios.post(
+    `https://${cdnData.cdn}/v2/info`,
+    { url: youtubeUrl },
+    { headers: SAVETUBE_HEADERS, timeout: 8000 }
+  )
+
+  const info = decryptSaveTube(infoRes.data)
+  const directMp4 = info.video_formats?.find((f) => f.url)?.url
+
+  const hectorStreamUrl = `https://yt-dl.officialhectormanuel.workers.dev/stream?id=${info.id}&format=360&key=${info.key}&title=${encodeURIComponent(info.title)}`
+
+  return {
+    streamUrl: directMp4 || hectorStreamUrl,
+    directMp4,
+    hectorStreamUrl,
+    title: info.title,
+    thumbnail: info.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    quality: '360p',
+    format: 'mp4',
+    type: 'video',
+    creator: 'SaveTube / Hector',
+    source: 'savetube-hector',
+    youtubeUrl,
+    videoId: videoId || info.id,
+    durationSec: info.duration,
+  }
+}
+
+// Fetch MP4 video download URL with multi-provider strategy
+const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false } = {}) => {
+  const videoId = extractVideoId(youtubeUrl)
+  const now = Date.now()
+
+  if (!forceRefresh && videoId && upstreamCache.has(videoId)) {
+    const cached = upstreamCache.get(videoId)
+    if (cached.expiresAt > now) {
+      return cached.data
+    }
+    upstreamCache.delete(videoId)
+  }
+
+  // 1. Try SaveTube + Hector Worker first (fast & reliable)
+  try {
+    const result = await fetchVideoFromSaveTubeAndHector(youtubeUrl)
+    if (videoId) {
+      upstreamCache.set(videoId, {
+        data: result,
+        expiresAt: now + UPSTREAM_CACHE_TTL_MS,
+      })
+    }
+    return result
+  } catch (err) {
+    console.warn(`[Video] SaveTube/Hector resolution failed for "${youtubeUrl}": ${err.message}. Trying David Cyril...`)
+  }
+
+  // 2. Fallback to David Cyril
+  const dcResult = await fetchVideoFromDavidCyril(youtubeUrl, { forceRefresh })
+  return {
+    ...dcResult,
+    streamUrl: dcResult.download_url,
+  }
+}
+
+// Fetch MP4 video download URL from David Cyril API with in-memory caching
+const fetchVideoFromDavidCyril = async (youtubeUrl, { forceRefresh = false } = {}) => {
+  const videoId = extractVideoId(youtubeUrl)
   const headers = process.env.DCYRIL_API_KEY ? { 'X-API-Key': process.env.DCYRIL_API_KEY } : {}
   const { data } = await axios.get(DC_YTMP4_URL, {
     params: { url: youtubeUrl },
-    timeout: 45000,
+    timeout: 35000,
     headers,
   })
 
@@ -166,19 +269,66 @@ const fetchVideoFromDavidCyril = async (youtubeUrl) => {
     creator: data.creator || 'David Cyril',
     source: 'david-cyril',
     youtubeUrl,
+    videoId: videoId || extractVideoId(youtubeUrl),
   }
 }
 
-// Get video stream/download URL for given input (URL, ID, or search query)
-const getVideoStreamUrl = async (input, hints = {}, options = {}) => {
-  const youtubeUrl = await detectYoutubeUrl(input, hints, options)
-  return fetchVideoFromDavidCyril(youtubeUrl)
+// Get video upstream URL by video ID (resolves or returns cached)
+const getVideoUpstreamUrl = async (videoId, { forceRefresh = false } = {}) => {
+  const cleanId = String(videoId || '').trim()
+  if (!YT_ID_RE.test(cleanId)) {
+    throw new Error(`Invalid YouTube video ID "${cleanId}"`)
+  }
+  const youtubeUrl = `https://www.youtube.com/watch?v=${cleanId}`
+  const info = await fetchVideoInfo(youtubeUrl, { forceRefresh })
+  return info.streamUrl || info.download_url
+}
+
+// Get video metadata with proxy URL for /api/videos/stream
+const getVideoStreamUrl = async (input, hints = {}, { host = 'localhost:4000', protocol = 'http' } = {}) => {
+  const qKey = norm(`${input}|${hints.title || ''}|${hints.artist || ''}|${hints.durationSec || ''}`)
+  const memoKey = `videos:stream_meta:${qKey}`
+
+  return memo(
+    memoKey,
+    VIDEO_TTL_MS,
+    async () => {
+      const youtubeUrl = await detectYoutubeUrl(input, hints)
+      const videoId = extractVideoId(youtubeUrl)
+      if (!videoId) {
+        throw new Error(`Could not extract video ID for "${input}"`)
+      }
+
+      // Pre-warm upstream link fetch in background without blocking response
+      fetchVideoInfo(youtubeUrl).catch(() => null)
+
+      const proxyUrl = `${protocol}://${host}/api/videos/play/${videoId}`
+
+      return {
+        url: proxyUrl,
+        download_url: proxyUrl,
+        title: hints.title || input,
+        thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        quality: '360p',
+        format: 'mp4',
+        type: 'video',
+        creator: 'SaveTube / Hector',
+        source: 'vybe-proxy',
+        youtubeUrl,
+        videoId,
+        durationSec: hints.durationSec,
+      }
+    },
+    { staleMs: VIDEO_TTL_MS }
+  )
 }
 
 module.exports = {
   findOfficialVideo,
   searchVideos,
   detectYoutubeUrl,
+  extractVideoId,
   fetchVideoFromDavidCyril,
+  getVideoUpstreamUrl,
   getVideoStreamUrl,
 }
