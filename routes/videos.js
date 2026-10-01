@@ -123,8 +123,8 @@ router.get('/play/:id', async (req, res) => {
 
   let cancelSource = axios.CancelToken.source()
 
-  req.on('close', () => {
-    cancelSource.cancel('Client disconnected')
+  req.on('aborted', () => {
+    cancelSource.cancel('Client aborted request')
   })
 
   try {

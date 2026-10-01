@@ -1,3 +1,8 @@
+const dns = require('dns')
+try {
+  dns.setDefaultResultOrder('ipv4first')
+} catch (_) {}
+
 const axios = require('axios')
 const memo = require('./memo')
 const { norm } = require('./text')
@@ -176,15 +181,21 @@ const SAVETUBE_HEADERS = {
 // Resolve video stream via SaveTube / Hector Cloudflare Worker
 const fetchVideoFromSaveTubeAndHector = async (youtubeUrl) => {
   const videoId = extractVideoId(youtubeUrl)
-  const { data: cdnData } = await axios.get('https://media.savetube.vip/api/random-cdn', {
-    headers: SAVETUBE_HEADERS,
-    timeout: 5000,
-  })
+  let cdn = 'cdn401.savetube.vip'
+  try {
+    const { data: cdnData } = await axios.get('https://media.savetube.vip/api/random-cdn', {
+      headers: SAVETUBE_HEADERS,
+      timeout: 8000,
+    })
+    if (cdnData?.cdn) cdn = cdnData.cdn
+  } catch (err) {
+    console.warn('[Video] random-cdn lookup failed, using fallback', cdn)
+  }
 
   const { data: infoRes } = await axios.post(
-    `https://${cdnData.cdn}/v2/info`,
+    `https://${cdn}/v2/info`,
     { url: youtubeUrl },
-    { headers: SAVETUBE_HEADERS, timeout: 8000 }
+    { headers: SAVETUBE_HEADERS, timeout: 15000 }
   )
 
   const info = decryptSaveTube(infoRes.data)
@@ -299,24 +310,36 @@ const getVideoStreamUrl = async (input, hints = {}, { host = 'localhost:4000', p
         throw new Error(`Could not extract video ID for "${input}"`)
       }
 
-      // Pre-warm upstream link fetch in background without blocking response
-      fetchVideoInfo(youtubeUrl).catch(() => null)
+      // Eagerly resolve the upstream URL so we know whether to proxy or not
+      let info
+      try {
+        info = await fetchVideoInfo(youtubeUrl)
+      } catch (_) {
+        info = null
+      }
 
       const proxyUrl = `${protocol}://${host}/api/videos/play/${videoId}`
+      const streamUrl = info?.streamUrl || info?.download_url
+
+      // Hector Worker URLs and other non-googlevideo CDN URLs can be handed
+      // directly to the phone — they're not IP-locked. Only googlevideo.com
+      // URLs need our proxy because they're bound to our server's IP.
+      const needsProxy = !streamUrl || streamUrl.includes('googlevideo.com')
+      const clientUrl = needsProxy ? proxyUrl : streamUrl
 
       return {
-        url: proxyUrl,
-        download_url: proxyUrl,
-        title: hints.title || input,
-        thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-        quality: '360p',
+        url: clientUrl,
+        download_url: clientUrl,
+        title: info?.title || hints.title || input,
+        thumbnail: info?.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        quality: info?.quality || '360p',
         format: 'mp4',
         type: 'video',
-        creator: 'SaveTube / Hector',
-        source: 'vybe-proxy',
+        creator: info?.creator || 'SaveTube / Hector',
+        source: needsProxy ? 'vybe-proxy' : 'direct',
         youtubeUrl,
         videoId,
-        durationSec: hints.durationSec,
+        durationSec: info?.durationSec || hints.durationSec,
       }
     },
     { staleMs: VIDEO_TTL_MS }
