@@ -249,10 +249,19 @@ const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false } = {}) => {
 
   // 2. Fallback to David Cyril
   const dcResult = await fetchVideoFromDavidCyril(youtubeUrl, { forceRefresh })
-  return {
+  const finalResult = {
     ...dcResult,
     streamUrl: dcResult.download_url,
   }
+
+  if (videoId) {
+    upstreamCache.set(videoId, {
+      data: finalResult,
+      expiresAt: now + UPSTREAM_CACHE_TTL_MS,
+    })
+  }
+
+  return finalResult
 }
 
 // Fetch MP4 video download URL from David Cyril API with in-memory caching
@@ -297,53 +306,31 @@ const getVideoUpstreamUrl = async (videoId, { forceRefresh = false } = {}) => {
 
 // Get video metadata with proxy URL for /api/videos/stream
 const getVideoStreamUrl = async (input, hints = {}, { host = 'localhost:4000', protocol = 'http' } = {}) => {
-  const qKey = norm(`${input}|${hints.title || ''}|${hints.artist || ''}|${hints.durationSec || ''}`)
-  const memoKey = `videos:stream_meta:${qKey}`
+  const youtubeUrl = await detectYoutubeUrl(input, hints)
+  const videoId = extractVideoId(youtubeUrl)
+  if (!videoId) {
+    throw new Error(`Could not extract video ID for "${input}"`)
+  }
 
-  return memo(
-    memoKey,
-    VIDEO_TTL_MS,
-    async () => {
-      const youtubeUrl = await detectYoutubeUrl(input, hints)
-      const videoId = extractVideoId(youtubeUrl)
-      if (!videoId) {
-        throw new Error(`Could not extract video ID for "${input}"`)
-      }
+  // Pre-warm upstream link fetch in background without blocking response
+  fetchVideoInfo(youtubeUrl).catch(() => null)
 
-      // Eagerly resolve the upstream URL so we know whether to proxy or not
-      let info
-      try {
-        info = await fetchVideoInfo(youtubeUrl)
-      } catch (_) {
-        info = null
-      }
+  const proxyUrl = `${protocol}://${host}/api/videos/play/${videoId}`
 
-      const proxyUrl = `${protocol}://${host}/api/videos/play/${videoId}`
-      const streamUrl = info?.streamUrl || info?.download_url
-
-      // Hector Worker URLs and other non-googlevideo CDN URLs can be handed
-      // directly to the phone — they're not IP-locked. Only googlevideo.com
-      // URLs need our proxy because they're bound to our server's IP.
-      const needsProxy = !streamUrl || streamUrl.includes('googlevideo.com')
-      const clientUrl = needsProxy ? proxyUrl : streamUrl
-
-      return {
-        url: clientUrl,
-        download_url: clientUrl,
-        title: info?.title || hints.title || input,
-        thumbnail: info?.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-        quality: info?.quality || '360p',
-        format: 'mp4',
-        type: 'video',
-        creator: info?.creator || 'SaveTube / Hector',
-        source: needsProxy ? 'vybe-proxy' : 'direct',
-        youtubeUrl,
-        videoId,
-        durationSec: info?.durationSec || hints.durationSec,
-      }
-    },
-    { staleMs: VIDEO_TTL_MS }
-  )
+  return {
+    url: proxyUrl,
+    download_url: proxyUrl,
+    title: hints.title || input,
+    thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    quality: '360p',
+    format: 'mp4',
+    type: 'video',
+    creator: 'SaveTube / Hector',
+    source: 'vybe-proxy',
+    youtubeUrl,
+    videoId,
+    durationSec: hints.durationSec,
+  }
 }
 
 module.exports = {
