@@ -144,7 +144,7 @@ router.get('/play/:id', async (req, res) => {
         url,
         headers,
         responseType: 'stream',
-        timeout: 45000,
+        timeout: 15000,
         cancelToken: cancelSource.token,
         validateStatus: (status) => (status >= 200 && status < 300) || status === 206,
       })

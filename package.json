@@ -9,6 +9,7 @@
     "test": "node --test test/providers.test.js test/server.test.js test/server-heavy.test.js test/server-nolimit.test.js test/spotify-search.test.js test/track-match.test.js test/videos.test.js"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
     "@fikxzmodzz/spotify-search": "^1.0.0",
     "@stef-0012/synclyrics": "^2.5.10",
     "axios": "^1.6.0",

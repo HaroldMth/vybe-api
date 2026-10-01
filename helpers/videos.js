@@ -185,7 +185,7 @@ const fetchVideoFromSaveTubeAndHector = async (youtubeUrl) => {
   try {
     const { data: cdnData } = await axios.get('https://media.savetube.vip/api/random-cdn', {
       headers: SAVETUBE_HEADERS,
-      timeout: 8000,
+      timeout: 3000,
     })
     if (cdnData?.cdn) cdn = cdnData.cdn
   } catch (err) {
@@ -195,11 +195,13 @@ const fetchVideoFromSaveTubeAndHector = async (youtubeUrl) => {
   const { data: infoRes } = await axios.post(
     `https://${cdn}/v2/info`,
     { url: youtubeUrl },
-    { headers: SAVETUBE_HEADERS, timeout: 15000 }
+    { headers: SAVETUBE_HEADERS, timeout: 6000 }
   )
 
   const info = decryptSaveTube(infoRes.data)
-  const directMp4 = info.video_formats?.find((f) => f.url)?.url
+  // SaveTube's googlevideo.com URLs are IP-locked to SaveTube's servers (returns 403 when proxied).
+  // Only use directMp4 if it's hosted on SaveTube CDN (e.g. cdn4XX.savetube.vip/media/...)
+  const directMp4 = info.video_formats?.find((f) => f.url && !f.url.includes('googlevideo.com'))?.url
 
   const hectorStreamUrl = `https://yt-dl.officialhectormanuel.workers.dev/stream?id=${info.id}&format=360&key=${info.key}&title=${encodeURIComponent(info.title)}`
 
@@ -270,7 +272,7 @@ const fetchVideoFromDavidCyril = async (youtubeUrl, { forceRefresh = false } = {
   const headers = process.env.DCYRIL_API_KEY ? { 'X-API-Key': process.env.DCYRIL_API_KEY } : {}
   const { data } = await axios.get(DC_YTMP4_URL, {
     params: { url: youtubeUrl },
-    timeout: 35000,
+    timeout: 15000,
     headers,
   })
 
