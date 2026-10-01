@@ -4,6 +4,9 @@ try {
 } catch (_) {}
 
 const axios = require('axios')
+const { execFile } = require('child_process')
+const os = require('os')
+const path = require('path')
 const memo = require('./memo')
 const { norm } = require('./text')
 const { parseQuery, parseDurationToSec, pickBestTrack, isUnwantedTitle } = require('./trackMatch')
@@ -225,7 +228,8 @@ const fetchVideoFromSaveTubeAndHector = async (youtubeUrl) => {
   }
 }
 
-// Resolve video stream via Omegatech (primary provider: ~2s resolution, googlevideo MP4 proxies fine with Range support)
+// Resolve video stream via Omegatech (fast fallback: ~2s resolution, googlevideo MP4 proxies fine with
+// Range support — but its cache can serve dead links, hence the proxy's 403 rotation)
 const fetchVideoFromOmegatech = async (youtubeUrl) => {
   const videoId = extractVideoId(youtubeUrl)
   const { data } = await axios.get(OMEGATECH_URL, {
@@ -259,62 +263,130 @@ const fetchVideoFromOmegatech = async (youtubeUrl) => {
   }
 }
 
-// Fetch MP4 video download URL with multi-provider strategy
-const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false } = {}) => {
+// Resolve video stream locally via yt-dlp (PRIMARY provider). Links are minted for THIS server's IP, so there is no
+// third-party staleness and no IP-lock: they cannot 403 on us the way cached provider links do.
+// The android/mweb/web_embedded player clients expose the muxed itag 18 MP4 (video+audio);// the default web client only returns video-only DASH formats.
+const YTDL_CLIENTS = ['android', 'mweb', 'web_embedded']
+const YTDL_TIMEOUT_MS = 20000
+
+const execFileAsync = (file, args) =>
+  new Promise((resolve, reject) => {
+    execFile(file, args, { timeout: YTDL_TIMEOUT_MS, windowsHide: true }, (err, stdout, stderr) => {
+      if (err) {
+        err.stderr = String(stderr || '')
+        return reject(err)
+      }
+      resolve(String(stdout || ''))
+    })
+  })
+
+const resolveYtDlpBin = async () => {
+  const primary = process.env.YTDLP_PATH || 'yt-dlp'
+  try {
+    await execFileAsync(primary, ['--version'])
+    return primary
+  } catch (err) {
+    if (process.env.YTDLP_PATH) {
+      throw new Error(`yt-dlp at YTDLP_PATH "${primary}" is not runnable: ${err.message}`)
+    }
+    if (err.code !== 'ENOENT') return primary // binary exists; --version itself hiccuped
+    const fallback = path.join(os.homedir(), '.local/bin/yt-dlp')
+    if (fallback === primary) throw new Error('yt-dlp binary not found')
+    await execFileAsync(fallback, ['--version'])
+    return fallback
+  }
+}
+
+const fetchVideoFromYtDlp = async (youtubeUrl) => {
+  const videoId = extractVideoId(youtubeUrl)
+  const bin = await resolveYtDlpBin()
+  let lastErr = new Error('yt-dlp did not return a URL')
+
+  for (const client of YTDL_CLIENTS) {
+    let out = ''
+    try {
+      out = await execFileAsync(bin, [
+        '--extractor-args', `youtube:player_client=${client}`,
+        '-f', '18/b', '-g', '--no-warnings', '--no-playlist', youtubeUrl,
+      ])
+    } catch (err) {
+      const detail = err.stderr.split('\n').filter(Boolean).pop() || err.message
+      lastErr = new Error(`${client}: ${detail}`)
+      continue
+    }
+    const url = out.split('\n').map((line) => line.trim()).find((line) => /^https?:\/\//.test(line))
+    if (!url) {
+      lastErr = new Error(`${client}: yt-dlp returned no URL`)
+      continue
+    }
+
+    return {
+      url,
+      download_url: url,
+      streamUrl: url,
+      title: '',
+      thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      quality: '360p',
+      format: 'mp4',
+      type: 'video',
+      creator: 'yt-dlp (local)',
+      source: 'yt-dlp',
+      youtubeUrl,
+      videoId,
+    }
+  }
+
+  throw lastErr
+}
+
+// Fetch MP4 video download URL with multi-provider strategy.
+// excludeSources lets the caller (the proxy's 403-rotation) drop a provider that just served a
+// dead link instead of getting the same corpse back from its cache.
+const fetchVideoInfo = async (youtubeUrl, { forceRefresh = false, excludeSources = [] } = {}) => {
   const videoId = extractVideoId(youtubeUrl)
   const now = Date.now()
 
   if (!forceRefresh && videoId && upstreamCache.has(videoId)) {
     const cached = upstreamCache.get(videoId)
-    if (cached.expiresAt > now) {
+    if (cached.expiresAt > now && !excludeSources.includes(cached.data?.source)) {
       return cached.data
     }
-    upstreamCache.delete(videoId)
-  }
-
-  // 1. Omegatech (primary: fast, streams directly through the proxy)
-  try {
-    const result = await fetchVideoFromOmegatech(youtubeUrl)
-    if (videoId) {
-      upstreamCache.set(videoId, {
-        data: result,
-        expiresAt: now + UPSTREAM_CACHE_TTL_MS,
-      })
+    if (cached.expiresAt <= now) {
+      upstreamCache.delete(videoId)
     }
-    return result
-  } catch (err) {
-    console.warn(`[Video] Omegatech resolution failed for "${youtubeUrl}": ${err.message}. Trying SaveTube/Hector...`)
   }
 
-  // 2. SaveTube + Hector Worker
-  try {
-    const result = await fetchVideoFromSaveTubeAndHector(youtubeUrl)
-    if (videoId) {
-      upstreamCache.set(videoId, {
-        data: result,
-        expiresAt: now + UPSTREAM_CACHE_TTL_MS,
-      })
+  const providers = [
+    { source: 'yt-dlp', run: () => fetchVideoFromYtDlp(youtubeUrl) },
+    { source: 'omegatech', run: () => fetchVideoFromOmegatech(youtubeUrl) },
+    { source: 'savetube-hector', run: () => fetchVideoFromSaveTubeAndHector(youtubeUrl) },
+    { source: 'david-cyril', run: () => fetchVideoFromDavidCyril(youtubeUrl, { forceRefresh }) },
+  ]
+
+  const failures = []
+  for (const provider of providers) {
+    if (excludeSources.includes(provider.source)) continue
+    try {
+      const result = await provider.run()
+      const data = { ...result, source: result.source || provider.source }
+      if (videoId) {
+        upstreamCache.set(videoId, {
+          data,
+          expiresAt: now + UPSTREAM_CACHE_TTL_MS,
+        })
+      }
+      return data
+    } catch (err) {
+      failures.push(`${provider.source}: ${err.message}`)
+      console.warn(`[Video] ${provider.source} failed for "${youtubeUrl}": ${err.message} - trying next provider`)
     }
-    return result
-  } catch (err) {
-    console.warn(`[Video] SaveTube/Hector resolution failed for "${youtubeUrl}": ${err.message}. Trying David Cyril...`)
   }
 
-  // 3. Fallback to David Cyril
-  const dcResult = await fetchVideoFromDavidCyril(youtubeUrl, { forceRefresh })
-  const finalResult = {
-    ...dcResult,
-    streamUrl: dcResult.download_url,
-  }
-
-  if (videoId) {
-    upstreamCache.set(videoId, {
-      data: finalResult,
-      expiresAt: now + UPSTREAM_CACHE_TTL_MS,
-    })
-  }
-
-  return finalResult
+  throw new Error(
+    failures.length
+      ? `All video providers failed -> ${failures.join(' | ')}`
+      : `No video providers available (excluded: ${excludeSources.join(', ')})`
+  )
 }
 
 // Fetch MP4 video download URL from David Cyril API with in-memory caching
@@ -346,15 +418,28 @@ const fetchVideoFromDavidCyril = async (youtubeUrl, { forceRefresh = false } = {
   }
 }
 
-// Get video upstream URL by video ID (resolves or returns cached)
-const getVideoUpstreamUrl = async (videoId, { forceRefresh = false } = {}) => {
+// Get video upstream URL by video ID (resolves or returns cached), plus which provider served it.
+// excludeSources drops providers (e.g. one that just returned a 403'd link) for this resolution.
+const getVideoUpstream = async (videoId, { forceRefresh = false, excludeSources = [] } = {}) => {
   const cleanId = String(videoId || '').trim()
   if (!YT_ID_RE.test(cleanId)) {
     throw new Error(`Invalid YouTube video ID "${cleanId}"`)
   }
   const youtubeUrl = `https://www.youtube.com/watch?v=${cleanId}`
-  const info = await fetchVideoInfo(youtubeUrl, { forceRefresh })
-  return info.streamUrl || info.download_url
+  const info = await fetchVideoInfo(youtubeUrl, { forceRefresh, excludeSources })
+  const url = info.streamUrl || info.download_url
+  if (!url) {
+    throw new Error(`Video provider "${info.source || 'unknown'}" returned no stream URL`)
+  }
+  return { url, source: info.source || 'unknown' }
+}
+
+const getVideoUpstreamUrl = async (videoId, opts) => (await getVideoUpstream(videoId, opts)).url
+
+// Drop a cached upstream URL so the next resolution picks a different (working) provider.
+const invalidateUpstreamCache = (videoId) => {
+  const cleanId = String(videoId || '').trim()
+  return cleanId ? upstreamCache.delete(cleanId) : false
 }
 
 // Get video metadata with proxy URL for /api/videos/stream
@@ -392,6 +477,8 @@ module.exports = {
   detectYoutubeUrl,
   extractVideoId,
   fetchVideoFromDavidCyril,
+  getVideoUpstream,
   getVideoUpstreamUrl,
+  invalidateUpstreamCache,
   getVideoStreamUrl,
 }

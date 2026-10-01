@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const axios = require('axios')
 const { searchMusicVideos } = require('../helpers/external')
-const { findOfficialVideo, searchVideos, getVideoStreamUrl, getVideoUpstreamUrl } = require('../helpers/videos')
+const { findOfficialVideo, searchVideos, getVideoStreamUrl, getVideoUpstream, invalidateUpstreamCache } = require('../helpers/videos')
 const { fail } = require('../helpers/respond')
 
 const str = (value) => (value == null ? '' : String(Array.isArray(value) ? value[0] : value).trim())
@@ -138,8 +138,8 @@ router.get('/play/:id', async (req, res) => {
   try {
     const t0 = Date.now()
     console.log(`[VideoProxy] Resolving upstream URL for id="${id}"...`)
-    let upstreamUrl = await getVideoUpstreamUrl(id)
-    console.log(`[VideoProxy] Upstream URL resolved in ${(Date.now() - t0)}ms -> ${upstreamUrl}`)
+    let current = await getVideoUpstream(id)
+    console.log(`[VideoProxy] Upstream URL resolved in ${Date.now() - t0}ms via "${current.source}" -> ${current.url}`)
 
     const fetchUpstream = async (url) => {
       const headers = {
@@ -162,23 +162,32 @@ router.get('/play/:id', async (req, res) => {
       })
     }
 
-    let upstreamRes
-    try {
-      upstreamRes = await fetchUpstream(upstreamUrl)
-      console.log(`[VideoProxy] Upstream connected! Status=${upstreamRes.status} Content-Type=${upstreamRes.headers['content-type']} Content-Length=${upstreamRes.headers['content-length']}`)
-    } catch (err) {
-      const status = err.response?.status
-      console.warn(`[VideoProxy] Upstream fetch failed for "${id}": status=${status || 'none'} err=${err.message}`)
-      if (status === 403 || status === 410) {
-        console.log(`[VideoProxy] Upstream returned ${status} for "${id}". Retrying once with fresh link...`)
-        upstreamUrl = await getVideoUpstreamUrl(id, { forceRefresh: true })
-        console.log(`[VideoProxy] Fresh upstream URL -> ${upstreamUrl}`)
-        cancelSource = axios.CancelToken.source()
-        req.on('close', () => cancelSource.cancel('Client disconnected'))
-        upstreamRes = await fetchUpstream(upstreamUrl)
-      } else {
-        throw err
+    // On ANY upstream failure (403 from a stale cached link, timeout, 5xx): drop the cached URL,
+    // exclude the provider that just failed, and rotate to the next one — up to 4 providers total.
+    const failedSources = []
+    let upstreamRes = null
+    let lastUpstreamErr = null
+
+    for (let attempt = 0; attempt < 4 && !upstreamRes; attempt++) {
+      if (attempt > 0) {
+        current = await getVideoUpstream(id, { excludeSources: failedSources })
+        console.log(`[VideoProxy] Rotating to provider "${current.source}" (excluded: ${failedSources.join(', ')}) -> ${current.url.substring(0, 90)}...`)
       }
+      try {
+        upstreamRes = await fetchUpstream(current.url)
+        console.log(`[VideoProxy] Upstream connected! Status=${upstreamRes.status} Content-Type=${upstreamRes.headers['content-type']} Content-Length=${upstreamRes.headers['content-length']}`)
+      } catch (err) {
+        if (axios.isCancel(err)) throw err
+        const status = err.response?.status
+        console.warn(`[VideoProxy] Upstream fetch failed via "${current.source}" for "${id}": status=${status || 'none'} err=${err.message}`)
+        failedSources.push(current.source)
+        invalidateUpstreamCache(id)
+        lastUpstreamErr = err
+      }
+    }
+
+    if (!upstreamRes) {
+      throw lastUpstreamErr || new Error('no upstream video provider available')
     }
 
     res.status(upstreamRes.status)
